@@ -888,19 +888,24 @@ const MINER_PRESETS = [
 ];
 
 const QUICK_SCENARIOS = {
+  // BTC's lifetime CAGR is roughly 60% and no rolling 4-year window has been
+  // negative. Scenarios are framed as plausible long-horizon CAGR bands rather
+  // than 12-month stress tests, and difficulty is coupled positively to price
+  // (more miners come online when BTC rallies, fewer when it stalls).
+  'bear': {
+    name: 'Bear',
+    // BTC price ~+15%/yr → ~1.17%/mo compounded; diff +15%/yr (slow miner growth)
+    overrides: { priceGrowthMo: 1.17, diffGrowthYr: 15 }
+  },
   'status-quo': {
     name: 'Status Quo',
-    overrides: { priceGrowthMo: 0, diffGrowthYr: 30 }
+    // BTC price ~+35%/yr → ~2.53%/mo; diff +30%/yr
+    overrides: { priceGrowthMo: 2.53, diffGrowthYr: 30 }
   },
   'bull': {
     name: 'Bull',
-    // BTC price ~+50% over ~12 months → roughly 3.4%/mo compounded; difficulty +20%/yr
-    overrides: { priceGrowthMo: 3.4, diffGrowthYr: 20 }
-  },
-  'bear': {
-    name: 'Bear',
-    // BTC price ~-30% over ~12 months → roughly -2.95%/mo; difficulty +60%/yr
-    overrides: { priceGrowthMo: -2.95, diffGrowthYr: 60 }
+    // BTC price ~+75%/yr → ~4.78%/mo; diff +50%/yr (fleet expansion follows price)
+    overrides: { priceGrowthMo: 4.78, diffGrowthYr: 50 }
   }
 };
 
