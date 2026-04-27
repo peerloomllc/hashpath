@@ -97,8 +97,19 @@
   .section-body{padding:14px 18px}
 
   /* ── CALC GRID ── */
-  .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-  @media (max-width:1100px){.calc-grid{grid-template-columns:1fr}}
+  .calc-grid{display:grid;gap:24px}
+  .calc-col-1{grid-area:col1}
+  .calc-col-2{grid-area:col2}
+  .calc-col-r{grid-area:results}
+  @media (min-width:1400px){
+    .calc-grid{grid-template-columns:1fr 1fr 1fr;grid-template-areas:"col1 col2 results"}
+  }
+  @media (min-width:1100px) and (max-width:1399px){
+    .calc-grid{grid-template-columns:1fr 1fr;grid-template-areas:"col1 results" "col2 results";align-items:start}
+  }
+  @media (max-width:1099px){
+    .calc-grid{grid-template-columns:1fr;grid-template-areas:"col1" "col2" "results"}
+  }
 
   /* ── FIELD GRID ── */
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
@@ -462,8 +473,8 @@
 <main class="view active" id="view-calc">
   <div class="calc-grid">
 
-    <!-- LEFT: INPUTS -->
-    <div>
+    <!-- COL 1: SITE + CAPEX -->
+    <div class="calc-col-1">
       <!-- SITE SWITCHER -->
       <section class="section site-section">
         <div class="section-header">
@@ -536,7 +547,10 @@
           </div>
         </div>
       </section>
+    </div>
 
+    <!-- COL 2: OPERATING + OWNERSHIP + NETWORK -->
+    <div class="calc-col-2">
       <!-- OPERATING -->
       <section class="section">
         <div class="section-header">
@@ -662,8 +676,8 @@
       </section>
     </div>
 
-    <!-- RIGHT: OUTPUTS -->
-    <div>
+    <!-- COL 3: RESULTS -->
+    <div class="calc-col-r">
       <section class="section">
         <div class="section-header">
           <span class="section-name">Results</span>
