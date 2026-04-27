@@ -87,10 +87,11 @@
   .view.active{display:block}
 
   /* ── SECTION ── */
-  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both;margin-bottom:18px}
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);animation:fadeUp .4s ease both;margin-bottom:18px}
   .section:nth-child(2){animation-delay:.05s}
   .section:nth-child(3){animation-delay:.1s}
-  .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2)}
+  .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0}
+  .section:has(.section-body.collapsed) .section-header{border-bottom:none;border-radius:calc(var(--radius) - 1px)}
   .section-name{font-family:var(--mono);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted)}
   .section-total{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--accent)}
   .section-body{padding:14px 18px}
@@ -118,10 +119,27 @@
   .field-suffix .field-input{padding-right:42px}
   .field-suffix.long .field-input{padding-right:72px}
 
-  /* ── TAX SECTION ── */
-  .tax-checkbox{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;color:var(--text-muted);cursor:pointer;letter-spacing:.5px}
-  .tax-checkbox input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent);margin:0}
-  .tax-disclaimer{font-family:var(--mono);font-size:11px;color:var(--text-dim);font-style:italic;letter-spacing:.5px;margin-top:2px}
+  /* ── COLLAPSIBLE WHOLE-SECTION ── */
+  .section-header.collapsible{cursor:pointer;user-select:none}
+  .section-header.collapsible:hover{background:rgba(255,255,255,.04)}
+  .section-name-wrap{display:flex;align-items:center;gap:8px}
+  .section-arrow{font-size:11px;color:var(--text-dim);transition:transform .2s;display:inline-block}
+  .section-arrow.open{transform:rotate(90deg)}
+  .section-body.collapsed{display:none}
+
+  /* ── HINT ICON / TOOLTIP ── */
+  .hint-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:10px;cursor:help;position:relative;flex:none;line-height:1}
+  .hint-icon:hover{color:var(--text-muted);border-color:var(--text-dim)}
+  .hint-icon::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);padding:8px 12px;background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:12px;font-style:normal;line-height:1.4;letter-spacing:.3px;white-space:normal;width:240px;text-align:left;z-index:200;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .15s}
+  .hint-icon:hover::after{opacity:1;visibility:visible}
+  .hint-icon::before{content:'';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border);z-index:200;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .15s}
+  .hint-icon:hover::before{opacity:1;visibility:visible}
+
+  /* ── ADVANCED TOGGLE (within Network & Market) ── */
+  .advanced-toggle{margin-top:14px;background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:12px;letter-spacing:1px;padding:6px 12px;border-radius:4px;cursor:pointer;width:100%;transition:all .15s;text-transform:uppercase}
+  .advanced-toggle:hover{color:var(--text-muted);border-color:var(--text-dim)}
+  .field-grid.advanced{margin-top:12px}
+  .field-grid.advanced.collapsed{display:none}
 
   /* ── POWER MODE TOGGLE ── */
   .power-mode-toggle{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px}
@@ -210,13 +228,11 @@
   .results-table .accent{color:var(--accent)}
   .results-table .total-row td{font-weight:500;background:rgba(247,147,26,.04);border-top:1px solid var(--border)}
   .results-table .sub{font-size:13px;color:var(--text-dim)}
+  .results-table tr.group-start td{border-top:1px solid var(--border);padding-top:12px}
+  .results-table tr.group-start:first-child td{border-top:none;padding-top:9px}
+  .results-table td.label .hint-icon{margin-left:6px;border-color:var(--border)}
 
   /* ── BIG STAT CARD ── */
-  .big-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
-  .big-stat-cell{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)}
-  .big-stat-label{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
-  .big-stat-value{font-family:var(--mono);font-size:24px;color:var(--accent);font-weight:500}
-  .big-stat-sub{font-family:var(--mono);font-size:13px;color:var(--text-muted)}
 
   /* ── FLEET SUMMARY ── */
   .fleet-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--border);background:var(--surface2)}
@@ -230,7 +246,7 @@
   @media (max-width:1100px){.charts-grid{grid-template-columns:1fr}}
   .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both}
   .chart-card.wide{grid-column:1/-1}
-  .chart-card-header{padding:14px 18px 10px;border-bottom:1px solid var(--border)}
+  .chart-card-header{padding:14px 18px 10px;border-bottom:1px solid var(--border);text-align:center}
   .chart-card-title{font-family:var(--mono);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted)}
   .chart-card-sub{font-family:var(--mono);font-size:13px;color:var(--text-dim);margin-top:3px}
   .chart-body{padding:18px;height:320px;position:relative}
@@ -242,6 +258,11 @@
   .scenarios-controls .quick-btn:hover{color:var(--accent);border-color:var(--accent-dim);background:var(--accent-glow)}
   .scenarios-controls .quick-btn.primary{color:var(--accent);border-color:var(--accent-dim)}
   .scenarios-controls .spacer{flex:1}
+  .quick-presets{display:flex;flex-wrap:wrap;gap:14px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border)}
+  .quick-preset{display:flex;flex-direction:column;align-items:stretch;gap:4px;flex:1;min-width:180px}
+  .quick-preset .quick-btn{font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:6px 12px;border-radius:4px;border:1px solid var(--border-light);background:transparent;color:var(--text-muted);cursor:pointer;transition:all .15s;text-align:center}
+  .quick-preset .quick-btn:hover{color:var(--accent);border-color:var(--accent-dim);background:var(--accent-glow)}
+  .quick-preset-sub{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--text-dim);text-align:center}
 
   .scenario-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:14px}
   .scenario-table th,.scenario-table td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.03);text-align:right;color:var(--text-muted)}
@@ -256,6 +277,7 @@
   .scenario-table .scen-load:hover{color:var(--accent);border-color:var(--accent-dim)}
 
   .scenarios-empty{padding:36px 18px;text-align:center;font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:1px}
+  .scen-params{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px;letter-spacing:.4px;font-weight:400}
 
   /* ── INLINE NAME PROMPT ── */
   .name-prompt-row{display:flex;gap:8px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center}
@@ -361,7 +383,6 @@
     .miner-fields{grid-template-columns:1fr 1fr;padding-left:18px}
     .field-grid{grid-template-columns:1fr}
     .field-grid.three{grid-template-columns:1fr 1fr}
-    .big-stat-row{grid-template-columns:1fr}
     .fleet-summary{grid-template-columns:1fr 1fr}
     .fleet-stat:nth-child(2n){border-right:none}
     .save-bar{padding:10px 12px;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;justify-content:center}
@@ -561,45 +582,21 @@
         </div>
       </section>
 
-      <!-- TAX (US) -->
+      <!-- OWNERSHIP -->
       <section class="section">
         <div class="section-header">
-          <span class="section-name">Tax (US)</span>
+          <span class="section-name-wrap">
+            <span class="section-name">Ownership</span>
+            <span class="hint-icon" data-tip="Set to &lt;100% if you only own part of the operation. The View strip above the calculator gets a Company / My share toggle that scales Results to your slice.">?</span>
+          </span>
         </div>
         <div class="section-body">
           <div class="field-grid">
-            <div class="field-group">
-              <label class="field-label">Tax rate</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="tax-rate" min="0" max="100" step="0.1" value="0">
-              </div>
-              <div class="tax-disclaimer">Effective marginal rate on mining income (e.g. ~35% for typical individual operator).</div>
-            </div>
-            <div class="field-group" id="dep-years-wrap">
-              <label class="field-label">Depreciation period</label>
-              <div class="field-suffix long" data-suffix="years">
-                <input type="number" class="field-input" id="dep-years" min="1" max="30" step="1" value="5">
-              </div>
-            </div>
             <div class="field-group full">
-              <label class="tax-checkbox">
-                <input type="checkbox" id="tax-miners-y1"> Expense miners 100% in year 1
-              </label>
-            </div>
-            <div class="field-group full">
-              <label class="tax-checkbox">
-                <input type="checkbox" id="tax-capex-y1"> Expense other CapEx 100% in year 1
-              </label>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Ownership share</label>
+              <label class="field-label">Your share</label>
               <div class="field-suffix" data-suffix="%">
                 <input type="number" class="field-input" id="ownership-share" min="0" max="100" step="0.1" value="100">
               </div>
-              <div class="tax-disclaimer">Your % of the LLC; toggle Results to "My share" to see your slice.</div>
-            </div>
-            <div class="field-group full tax-disclaimer">
-              Rough US business-mining estimate, not tax advice.
             </div>
           </div>
         </div>
@@ -607,23 +604,14 @@
 
       <!-- NETWORK / MARKET -->
       <section class="section">
-        <div class="section-header">
-          <span class="section-name">Network & Market</span>
+        <div class="section-header collapsible" id="network-header">
+          <span class="section-name-wrap">
+            <span class="section-arrow" id="network-arrow">▶</span>
+            <span class="section-name">Network & Market</span>
+          </span>
         </div>
-        <div class="section-body">
+        <div class="section-body collapsed" id="network-body">
           <div class="field-grid">
-            <div class="field-group">
-              <label class="field-label">BTC price <span class="live-dot" id="dot-btc"></span></label>
-              <div class="field-suffix" data-suffix="USD">
-                <input type="number" class="field-input" id="btc-price" min="0" step="100">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Network difficulty <span class="live-dot" id="dot-diff"></span></label>
-              <div class="field-suffix" data-suffix="T">
-                <input type="number" class="field-input" id="difficulty" min="0" step="0.01">
-              </div>
-            </div>
             <div class="field-group">
               <label class="field-label">Block reward</label>
               <div class="field-suffix" data-suffix="BTC">
@@ -631,9 +619,9 @@
               </div>
             </div>
             <div class="field-group">
-              <label class="field-label">Next adjustment <span class="live-dot" id="dot-adj"></span></label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="next-adj" step="0.01" value="0">
+              <label class="field-label">Time horizon</label>
+              <div class="field-suffix long" data-suffix="months">
+                <input type="number" class="field-input" id="horizon" min="1" max="120" step="1" value="36">
               </div>
             </div>
             <div class="field-group">
@@ -648,10 +636,25 @@
                 <input type="number" class="field-input" id="price-growth" step="0.1" value="0">
               </div>
             </div>
+          </div>
+          <button class="advanced-toggle" id="network-advanced-toggle" type="button">+ Show live values (auto-fetched)</button>
+          <div class="field-grid advanced collapsed" id="network-advanced">
+            <div class="field-group">
+              <label class="field-label">BTC price <span class="live-dot" id="dot-btc"></span></label>
+              <div class="field-suffix" data-suffix="USD">
+                <input type="number" class="field-input" id="btc-price" min="0" step="100">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Network difficulty <span class="live-dot" id="dot-diff"></span></label>
+              <div class="field-suffix" data-suffix="T">
+                <input type="number" class="field-input" id="difficulty" min="0" step="0.01">
+              </div>
+            </div>
             <div class="field-group full">
-              <label class="field-label">Time horizon</label>
-              <div class="field-suffix long" data-suffix="months">
-                <input type="number" class="field-input" id="horizon" min="1" max="120" step="1" value="36">
+              <label class="field-label">Next adjustment <span class="live-dot" id="dot-adj"></span></label>
+              <div class="field-suffix" data-suffix="%">
+                <input type="number" class="field-input" id="next-adj" step="0.01" value="0">
               </div>
             </div>
           </div>
@@ -678,33 +681,6 @@
         </table>
       </section>
 
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name">Bitcoin Lens</span>
-        </div>
-        <div class="big-stat-row">
-          <div class="big-stat-cell">
-            <div class="big-stat-label">Sats per $ mined</div>
-            <div class="big-stat-value" id="sats-per-dollar">—</div>
-            <div class="big-stat-sub" id="sats-per-dollar-sub">—</div>
-          </div>
-          <div class="big-stat-cell">
-            <div class="big-stat-label">BTC mined / month</div>
-            <div class="big-stat-value" id="btc-per-month">—</div>
-            <div class="big-stat-sub" id="btc-per-month-sub">—</div>
-          </div>
-          <div class="big-stat-cell">
-            <div class="big-stat-label">Lifetime BTC</div>
-            <div class="big-stat-value" id="btc-lifetime">—</div>
-            <div class="big-stat-sub" id="btc-lifetime-sub">—</div>
-          </div>
-          <div class="big-stat-cell">
-            <div class="big-stat-label">Marginal cost / BTC</div>
-            <div class="big-stat-value" id="marginal-cost">—</div>
-            <div class="big-stat-sub" id="marginal-cost-sub">power + ops only</div>
-          </div>
-        </div>
-      </section>
     </div>
 
   </div>
@@ -749,11 +725,8 @@
   <section class="section">
     <div class="scenarios-controls">
       <button class="quick-btn primary" id="save-scenario-btn">+ Save current as scenario</button>
-      <span class="spacer"></span>
-      <button class="quick-btn" data-quick="status-quo">Load: Status Quo</button>
-      <button class="quick-btn" data-quick="bull">Load: Bull</button>
-      <button class="quick-btn" data-quick="bear">Load: Bear</button>
     </div>
+    <div class="quick-presets" id="quick-presets"></div>
     <div id="name-prompt"></div>
     <div id="scenarios-content"></div>
   </section>
@@ -927,7 +900,6 @@ const state = {
   sites: [],           // [{ id, name, power:{mode,elecRate,coloRate}, ops:{uptimePct,maintenancePct} }]
   customPresets: [],   // user-saved miner presets [{id, name, cost, hashrate, watts}]
   ops:   { poolFeePct:1.5 },   // pool fee stays global
-  tax:   { ratePct:0, depreciationYears:5, expenseMinersYear1:false, expenseCapexYear1:false },
   ownership: { sharePct:100 },
   network: {
     btcPrice: 95000,
@@ -938,7 +910,7 @@ const state = {
     priceGrowthMoPct: 0,
     horizonMonths: 36
   },
-  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', expandedMiners:{}, minersExpanded:false, capexExpanded:false },
+  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false },
   scenarios: [],
   // Cached live data (informational only — display in ticker)
   live: {
@@ -995,7 +967,6 @@ function persist() {
       sites: state.sites,
       customPresets: state.customPresets,
       ops: state.ops,
-      tax: state.tax,
       ownership: state.ownership,
       network: state.network,
       ui: {
@@ -1005,7 +976,9 @@ function persist() {
         resultsViewMode: state.ui.resultsViewMode,
         expandedMiners: state.ui.expandedMiners,
         minersExpanded: state.ui.minersExpanded,
-        capexExpanded: state.ui.capexExpanded
+        capexExpanded: state.ui.capexExpanded,
+        networkExpanded: state.ui.networkExpanded,
+        networkAdvancedExpanded: state.ui.networkAdvancedExpanded
       },
       scenarios: state.scenarios
     };
@@ -1056,13 +1029,7 @@ function migrateSnapshot(snap) {
     out.capexItems = out.capexItems.map(it => it.siteId ? it : { ...it, siteId });
   }
   out.ops = { poolFeePct: legacyOps.poolFeePct ?? 1.5 };
-  const legacyTax = out.tax || {};
-  out.tax = {
-    ratePct: legacyTax.ratePct ?? 0,
-    depreciationYears: legacyTax.depreciationYears ?? 5,
-    expenseMinersYear1: !!legacyTax.expenseMinersYear1,
-    expenseCapexYear1: !!legacyTax.expenseCapexYear1
-  };
+  delete out.tax;
   const legacyOwn = out.ownership || {};
   let sharePct = parseFloat(legacyOwn.sharePct);
   if (!isFinite(sharePct)) sharePct = 100;
@@ -1077,7 +1044,6 @@ function applySnapshotData(snap) {
   state.capexItems = m.capexItems;
   state.sites = m.sites;
   state.ops = m.ops;
-  state.tax = m.tax;
   state.ownership = m.ownership;
 
   state.network = {
@@ -1090,6 +1056,8 @@ function applySnapshotData(snap) {
     state.ui.expandedMiners = snap.ui.expandedMiners || {};
     state.ui.minersExpanded = !!snap.ui.minersExpanded;
     state.ui.capexExpanded = !!snap.ui.capexExpanded;
+    state.ui.networkExpanded = !!snap.ui.networkExpanded;
+    state.ui.networkAdvancedExpanded = !!snap.ui.networkAdvancedExpanded;
     if (snap.ui.activeSiteId) state.ui.activeSiteId = snap.ui.activeSiteId;
     if (snap.ui.resultsSiteId) state.ui.resultsSiteId = snap.ui.resultsSiteId;
     if (snap.ui.resultsViewMode === 'partner' || snap.ui.resultsViewMode === 'company') {
@@ -1317,8 +1285,6 @@ function project(s, siteId = null) {
       hashrate: ft.hashrate,
       watts: ft.watts,
       capex: ft.capex,
-      otherCapex: ft.otherCapex,
-      minersCapex: ft.capex - ft.otherCapex,
       units: ft.units,
       elecRate: +site.power.elecRate || 0,
       coloRate: +site.power.coloRate || 0,
@@ -1332,28 +1298,15 @@ function project(s, siteId = null) {
     hashrate: acc.hashrate + sp.hashrate,
     watts: acc.watts + sp.watts,
     capex: acc.capex + sp.capex,
-    otherCapex: acc.otherCapex + sp.otherCapex,
-    minersCapex: acc.minersCapex + sp.minersCapex,
     units: acc.units + sp.units
-  }), { hashrate:0, watts:0, capex:0, otherCapex:0, minersCapex:0, units:0 });
+  }), { hashrate:0, watts:0, capex:0, units:0 });
 
   const ths = aggregate.hashrate;
   const totalW = aggregate.watts;
   const totalCapex = aggregate.capex;
-  const totalMinersCapex = aggregate.minersCapex;
-  const totalOtherCapex = aggregate.otherCapex;
   const units = aggregate.units;
 
   const poolFee = (+opts.ops.poolFeePct || 0) / 100;
-
-  const tax = opts.tax || {};
-  const taxRate = (+tax.ratePct || 0) / 100;
-  const depYears = Math.max(1, parseInt(tax.depreciationYears, 10) || 5);
-  const depMonths = depYears * 12;
-  const expenseMinersY1 = !!tax.expenseMinersYear1;
-  const expenseCapexY1 = !!tax.expenseCapexYear1;
-  const minersDepPerMonth = expenseMinersY1 ? 0 : totalMinersCapex / depMonths;
-  const otherCapexDepPerMonth = expenseCapexY1 ? 0 : totalOtherCapex / depMonths;
 
   let difficulty = (+opts.network.difficultyT || 0) * 1e12;
   let btcPrice = +opts.network.btcPrice || 0;
@@ -1369,11 +1322,9 @@ function project(s, siteId = null) {
   const monthsToHalving = monthsUntilHalving();
 
   let cumulative = -totalCapex;
-  let cumulativeAfterTax = -totalCapex;
   let breakevenMonth = null;
-  let breakevenMonthAfterTax = null;
   const rows = [];
-  let totals = { btc:0, revenue:0, power:0, fees:0, net:0, depreciation:0, tax:0, afterTaxNet:0 };
+  let totals = { btc:0, revenue:0, power:0, fees:0, net:0 };
 
   // Static per-month pieces
   const daysInMonth = 30.4375;
@@ -1410,35 +1361,14 @@ function project(s, siteId = null) {
     const monthFees = monthPool + monthMaint;
     const monthNet = monthRevenue - monthFees - monthPower;
 
-    // Depreciation deduction for this month (non-cash)
-    let monthDep = 0;
-    if (expenseMinersY1) {
-      if (i === 1) monthDep += totalMinersCapex;
-    } else if (i <= depMonths) {
-      monthDep += minersDepPerMonth;
-    }
-    if (expenseCapexY1) {
-      if (i === 1) monthDep += totalOtherCapex;
-    } else if (i <= depMonths) {
-      monthDep += otherCapexDepPerMonth;
-    }
-    const monthTaxable = monthNet - monthDep;
-    const monthTax = monthTaxable * taxRate;
-    const monthAfterTaxNet = monthNet - monthTax;
-
     cumulative += monthNet;
-    cumulativeAfterTax += monthAfterTaxNet;
     if (breakevenMonth === null && cumulative >= 0) breakevenMonth = i;
-    if (breakevenMonthAfterTax === null && cumulativeAfterTax >= 0) breakevenMonthAfterTax = i;
 
     totals.btc += monthBtc;
     totals.revenue += monthRevenue;
     totals.power += monthPower;
     totals.fees += monthFees;
     totals.net += monthNet;
-    totals.depreciation += monthDep;
-    totals.tax += monthTax;
-    totals.afterTaxNet += monthAfterTaxNet;
 
     rows.push({
       month: i,
@@ -1451,11 +1381,7 @@ function project(s, siteId = null) {
       poolPaid: monthPool,
       maintCost: monthMaint,
       netProfit: monthNet,
-      depreciation: monthDep,
-      tax: monthTax,
-      afterTaxNet: monthAfterTaxNet,
-      cumulative,
-      cumulativeAfterTax
+      cumulative
     });
 
     // Apply growth for next month
@@ -1473,15 +1399,10 @@ function project(s, siteId = null) {
     rows,
     totals,
     capex: totalCapex,
-    minersCapex: totalMinersCapex,
-    otherCapex: totalOtherCapex,
     horizon,
     fleet: { units, hashrate: ths, watts: totalW, efficiency: ths > 0 ? totalW / ths : null },
     breakevenMonth,
-    breakevenMonthAfterTax,
     horizonProfit: lifetimeProfit,
-    horizonProfitAfterTax: cumulativeAfterTax,
-    taxRatePct: (+tax.ratePct || 0),
     roi,
     allInCostPerBtc,
     marginalCostPerBtc,
@@ -1742,13 +1663,6 @@ function renderResults(p) {
     $('#kpi-roi').className = 's-value roi';
     $('#kpi-cost-per-btc').textContent = '—';
     $('#results-tbody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:24px">Add a miner to see results</td></tr>';
-    $('#sats-per-dollar').textContent = '—';
-    $('#sats-per-dollar-sub').textContent = '—';
-    $('#btc-per-month').textContent = '—';
-    $('#btc-per-month-sub').textContent = '—';
-    $('#btc-lifetime').textContent = '—';
-    $('#btc-lifetime-sub').textContent = '—';
-    $('#marginal-cost').textContent = '—';
     $('#results-headline').textContent = '$0';
     return;
   }
@@ -1763,7 +1677,7 @@ function renderResults(p) {
     ? Math.round((m1NetShare / state.network.btcPrice) * 1e8)
     : 0;
   sub.textContent = m1NetShare > 0
-    ? '≈ ' + monthSats.toLocaleString('en-US') + ' sats / mo at current price'
+    ? 'profit ≈ ' + monthSats.toLocaleString('en-US') + ' sats / mo at today\'s price'
     : (m1NetShare < 0 ? 'unprofitable at month 1' : '—');
 
   // KPIs (break-even and ROI are share-invariant — they're about the operation)
@@ -1790,101 +1704,53 @@ function renderResults(p) {
   const m1PowerCost = m1.powerCost * share;
   const m1Fees = (m1.poolPaid + m1.maintCost) * share;
   const m1Net = m1.netProfit * share;
-  const m1Tax = m1.tax * share;
-  const m1AfterTax = m1.afterTaxNet * share;
   const totalRevenue = p.totals.revenue * share;
   const totalPower = p.totals.power * share;
   const totalFees = p.totals.fees * share;
   const totalNet = p.totals.net * share;
   const lifetimeBtc = p.totals.btc * share;
-  const totalTax = p.totals.tax * share;
-  const totalAfterTaxNet = p.totals.afterTaxNet * share;
   const sharedCapex = p.capex * share;
   const lifetimeProfit = p.horizonProfit * share;
-  const lifetimeAfterTax = p.horizonProfitAfterTax * share;
 
   const tbody = $('#results-tbody');
-  const showTax = (p.taxRatePct || 0) > 0;
-  const taxRows = showTax ? `
-    <tr>
-      <td class="label">Income tax</td>
-      <td class="r ${m1Tax >= 0 ? 'neg' : 'pos'}">${fmtUSD(-m1Tax)}</td>
-      <td class="r ${totalTax >= 0 ? 'neg' : 'pos'}">${fmtUSD(-totalTax)}</td>
-    </tr>
-    <tr>
-      <td class="label">Operating profit (after tax)</td>
-      <td class="r ${m1AfterTax>=0?'pos':'neg'}">${fmtUSD(m1AfterTax)}</td>
-      <td class="r ${totalAfterTaxNet>=0?'pos':'neg'}">${fmtUSD(totalAfterTaxNet)}</td>
-    </tr>
-  ` : '';
-  const finalRow = showTax ? `
-    <tr class="total-row">
-      <td class="label">Net (after CapEx, after tax)</td>
-      <td class="r ${m1AfterTax>=0?'pos':'neg'}">${fmtUSD(m1AfterTax)}</td>
-      <td class="r ${lifetimeAfterTax>=0?'pos':'neg'}">${fmtUSD(lifetimeAfterTax)}</td>
-    </tr>
-  ` : `
-    <tr class="total-row">
-      <td class="label">Net (after CapEx)</td>
-      <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
-      <td class="r ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}</td>
-    </tr>
-  `;
+  const tip = (s) => `<span class="hint-icon" data-tip="${s.replace(/"/g, '&quot;')}">?</span>`;
   tbody.innerHTML = `
-    <tr>
-      <td class="label">BTC mined</td>
+    <tr class="group-start">
+      <td class="label">BTC mined ${tip('Bitcoin mined by the operation. Per-month is month 1; lifetime sums over the horizon. Halving and difficulty growth are applied through the projection.')}</td>
       <td class="r accent">${fmtBTC(m1Btc, 5)}</td>
       <td class="r accent">${fmtBTC(lifetimeBtc, 4)}</td>
     </tr>
     <tr>
-      <td class="label">Gross revenue</td>
+      <td class="label">Gross revenue ${tip('BTC mined × BTC price, before any fees or costs.')}</td>
       <td class="r">${fmtUSD(m1Revenue)}</td>
       <td class="r">${fmtUSD(totalRevenue)}</td>
     </tr>
-    <tr>
-      <td class="label">Power cost</td>
+    <tr class="group-start">
+      <td class="label">Power cost ${tip('Either kWh × electricity rate, or kW × hosting rate per month, scaled by uptime %.')}</td>
       <td class="r neg">${fmtUSD(-m1PowerCost)}</td>
       <td class="r neg">${fmtUSD(-totalPower)}</td>
     </tr>
     <tr>
-      <td class="label">Pool + maintenance</td>
+      <td class="label">Pool + maintenance ${tip('Pool fee % of gross revenue plus maintenance overhead % of gross revenue.')}</td>
       <td class="r neg">${fmtUSD(-m1Fees)}</td>
       <td class="r neg">${fmtUSD(-totalFees)}</td>
     </tr>
     <tr>
-      <td class="label">Operating profit</td>
+      <td class="label">Operating profit ${tip('Gross revenue minus power cost minus pool/maintenance fees. Cash flow from operations.')}</td>
       <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
       <td class="r ${totalNet>=0?'pos':'neg'}">${fmtUSD(totalNet)}</td>
     </tr>
-    ${taxRows}
-    <tr>
-      <td class="label">Less CapEx</td>
+    <tr class="group-start">
+      <td class="label">Less CapEx ${tip('Total upfront capital expenditure: miners + other CapEx items. Paid in full at month 0.')}</td>
       <td class="r sub">—</td>
       <td class="r neg">${fmtUSD(-sharedCapex)}</td>
     </tr>
-    ${finalRow}
+    <tr class="total-row">
+      <td class="label">Net (after CapEx) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx.')}</td>
+      <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
+      <td class="r ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}</td>
+    </tr>
   `;
-  if (showTax) {
-    $('#results-headline').textContent = fmtUSD(lifetimeAfterTax);
-  }
-
-  // Bitcoin Lens
-  // Sats per dollar of all-in cost
-  const satsPerDollar = isFinite(p.allInCostPerBtc) && p.allInCostPerBtc > 0
-    ? (1e8 / p.allInCostPerBtc) : 0;
-  const marketSatsPerDollar = state.network.btcPrice > 0 ? 1e8 / state.network.btcPrice : 0;
-  $('#sats-per-dollar').textContent = satsPerDollar > 0 ? Math.round(satsPerDollar).toLocaleString('en-US') : '—';
-  $('#sats-per-dollar-sub').textContent = (marketSatsPerDollar > 0)
-    ? 'market: ' + Math.round(marketSatsPerDollar).toLocaleString('en-US') + ' / $'
-    : '—';
-
-  $('#btc-per-month').textContent = fmtBTC(m1Btc, 5);
-  $('#btc-per-month-sub').textContent = '≈ ' + Math.round(m1Btc * 1e8).toLocaleString('en-US') + ' sats';
-
-  $('#btc-lifetime').textContent = fmtBTC(lifetimeBtc, 4);
-  $('#btc-lifetime-sub').textContent = '≈ ' + Math.round(lifetimeBtc * 1e8).toLocaleString('en-US') + ' sats';
-
-  $('#marginal-cost').textContent = isFinite(p.marginalCostPerBtc) ? fmtUSD(p.marginalCostPerBtc) : '—';
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1975,33 +1841,17 @@ function renderCharts(p) {
     });
   } else {
     datasets = [{
-      label: 'Cumulative net (pre-tax)',
+      label: 'Cumulative net (USD)',
       data: p.rows.map(r => r.cumulative * share),
       borderColor: c.accent,
       backgroundColor: 'rgba(247,147,26,0.10)',
       fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2
     }];
-    if ((p.taxRatePct || 0) > 0) {
-      datasets.push({
-        label: 'Cumulative net (after tax)',
-        data: p.rows.map(r => r.cumulativeAfterTax * share),
-        borderColor: c.green,
-        backgroundColor: 'rgba(168,208,141,0.10)',
-        fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2,
-        borderDash: [6, 4]
-      });
-    }
   }
 
-  let cumSub = p.breakevenMonth != null
+  const cumSub = p.breakevenMonth != null
     ? `Break-even at month ${p.breakevenMonth} · horizon ${p.horizon} mo`
     : `No break-even within ${p.horizon} mo`;
-  if (!isStacked && (p.taxRatePct || 0) > 0) {
-    const aft = p.breakevenMonthAfterTax != null
-      ? `after-tax break-even M${p.breakevenMonthAfterTax}`
-      : 'no after-tax break-even';
-    cumSub += ' · ' + aft;
-  }
   $('#chart-cum-sub').textContent = isStacked ? (cumSub + ' · stacked by site') : cumSub;
 
   const cumOpts = commonChartOpts();
@@ -2087,7 +1937,6 @@ function cloneState() {
     capexItems: state.capexItems,
     sites: state.sites.map(s => ({ ...s, power: { ...s.power }, ops: { ...s.ops } })),
     ops: { ...state.ops },
-    tax: { ...state.tax },
     ownership: { ...state.ownership },
     network: { ...state.network }
   };
@@ -2104,7 +1953,6 @@ function snapshotState() {
     capexItems: state.capexItems,
     sites: state.sites,
     ops: state.ops,
-    tax: state.tax,
     ownership: state.ownership,
     network: state.network
   }));
@@ -2116,7 +1964,6 @@ function applyScenarioSnapshot(snap) {
   state.capexItems = m.capexItems;
   state.sites = m.sites;
   state.ops = m.ops;
-  state.tax = m.tax;
   state.ownership = m.ownership;
   state.ui.activeSiteId = state.sites[0].id;
   state.ui.resultsSiteId = 'all';
@@ -2147,6 +1994,51 @@ function applyQuickScenario(key) {
   showToast('Loaded: ' + q.name, 'success');
 }
 
+function renderQuickPresets() {
+  const container = $('#quick-presets');
+  if (!container) return;
+  container.innerHTML = '';
+  for (const [key, q] of Object.entries(QUICK_SCENARIOS)) {
+    const card = document.createElement('div');
+    card.className = 'quick-preset';
+    const sign = q.overrides.priceGrowthMo > 0 ? '+' : '';
+    const sub = 'price ' + sign + q.overrides.priceGrowthMo + '%/mo · diff ' + q.overrides.diffGrowthYr + '%/yr';
+    const btn = document.createElement('button');
+    btn.className = 'quick-btn';
+    btn.dataset.quick = key;
+    btn.textContent = 'Load: ' + q.name;
+    btn.addEventListener('click', () => applyQuickScenario(key));
+    const subEl = document.createElement('div');
+    subEl.className = 'quick-preset-sub';
+    subEl.textContent = sub;
+    card.appendChild(btn);
+    card.appendChild(subEl);
+    container.appendChild(card);
+  }
+}
+
+function summarizeSnapshot(snap) {
+  const network = snap.network || {};
+  const own = snap.ownership || {};
+  const minersCount = (snap.miners || []).reduce((sum, m) => sum + (m.units || 0), 0);
+  const minersCost = (snap.miners || []).reduce((sum, m) => sum + ((m.units || 0) * (m.cost || 0)), 0);
+  const otherCapex = (snap.capexItems || []).reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
+  const totalCapex = minersCost + otherCapex;
+  const priceGr = +network.priceGrowthMoPct || 0;
+  const diffGr = +network.diffGrowthYrPct || 0;
+  const horizon = +network.horizonMonths || 0;
+  const share = own.sharePct == null ? 100 : +own.sharePct;
+  const parts = [];
+  parts.push('BTC ' + fmtUSD(+network.btcPrice || 0));
+  parts.push('price ' + (priceGr >= 0 ? '+' : '') + priceGr + '%/mo');
+  parts.push('diff +' + diffGr + '%/yr');
+  parts.push(horizon + ' mo');
+  if (share < 100) parts.push(share + '% share');
+  parts.push(minersCount + ' miner' + (minersCount === 1 ? '' : 's'));
+  parts.push(fmtUSD(totalCapex) + ' capex');
+  return parts.join(' · ');
+}
+
 function renderScenarios() {
   const content = $('#scenarios-content');
   const cur = project(state);
@@ -2173,6 +2065,7 @@ function renderScenarios() {
     });
   }
 
+  const currentParams = summarizeSnapshot(state);
   if (state.scenarios.length === 0) {
     content.innerHTML = `
       <table class="scenario-table">
@@ -2181,7 +2074,7 @@ function renderScenarios() {
         </tr></thead>
         <tbody>
           <tr class="scen-current">
-            <td class="scen-name">(current)</td>
+            <td class="scen-name">(current)<div class="scen-params">${escapeHtml(currentParams)}</div></td>
             <td>${rows[0].breakeven != null ? rows[0].breakeven + ' mo' : 'Never'}</td>
             <td>${fmtPct(rows[0].roi)}</td>
             <td>${fmtUSD(rows[0].horizonProfit)}</td>
@@ -2203,9 +2096,10 @@ function renderScenarios() {
       const beTxt = r.breakeven != null ? r.breakeven + ' mo' : 'Never';
       const actions = r.isCurrent ? '' :
         `<button class="scen-load" data-load="${r.id}">Load</button> <button class="scen-delete" data-del="${r.id}" title="Delete">✕</button>`;
+      const params = r.isCurrent ? currentParams : summarizeSnapshot(state.scenarios.find(s => s.id === r.id).snapshot);
       html += `
         <tr class="${cls}">
-          <td class="scen-name">${escapeHtml(r.name)}</td>
+          <td class="scen-name">${escapeHtml(r.name)}<div class="scen-params">${escapeHtml(params)}</div></td>
           <td>${beTxt}</td>
           <td>${fmtPct(r.roi)}</td>
           <td>${fmtUSD(r.horizonProfit)}</td>
@@ -2348,23 +2242,21 @@ function syncInputsFromState() {
   $('#diff-growth').value = state.network.diffGrowthYrPct;
   $('#price-growth').value = state.network.priceGrowthMoPct;
   $('#horizon').value = state.network.horizonMonths;
-  $('#tax-rate').value = state.tax.ratePct;
-  $('#dep-years').value = state.tax.depreciationYears;
-  $('#tax-miners-y1').checked = !!state.tax.expenseMinersYear1;
-  $('#tax-capex-y1').checked = !!state.tax.expenseCapexYear1;
   $('#ownership-share').value = state.ownership.sharePct;
-  syncDepYearsEnabled();
+  syncCollapsibleSections();
   const nameInp = $('#site-name-input');
   if (nameInp) nameInp.value = site.name || '';
   syncPowerModeUI();
 }
 
-function syncDepYearsEnabled() {
-  const both = !!state.tax.expenseMinersYear1 && !!state.tax.expenseCapexYear1;
-  const wrap = $('#dep-years-wrap');
-  if (wrap) wrap.classList.toggle('disabled', both);
-  const inp = $('#dep-years');
-  if (inp) inp.disabled = both;
+function syncCollapsibleSections() {
+  const netOpen = !!state.ui.networkExpanded;
+  $('#network-arrow').classList.toggle('open', netOpen);
+  $('#network-body').classList.toggle('collapsed', !netOpen);
+  const advOpen = !!state.ui.networkAdvancedExpanded;
+  $('#network-advanced').classList.toggle('collapsed', !advOpen);
+  const advBtn = $('#network-advanced-toggle');
+  if (advBtn) advBtn.textContent = advOpen ? '− Hide live values' : '+ Show live values (auto-fetched)';
 }
 
 function syncPowerModeUI() {
@@ -2518,7 +2410,6 @@ function exportJSON() {
     sites: state.sites,
     customPresets: state.customPresets,
     ops: state.ops,
-    tax: state.tax,
     ownership: state.ownership,
     network: state.network,
     ui: {
@@ -2527,7 +2418,9 @@ function exportJSON() {
       resultsSiteId: state.ui.resultsSiteId,
       resultsViewMode: state.ui.resultsViewMode,
       expandedMiners: state.ui.expandedMiners,
-      capexExpanded: state.ui.capexExpanded
+      capexExpanded: state.ui.capexExpanded,
+      networkExpanded: state.ui.networkExpanded,
+      networkAdvancedExpanded: state.ui.networkAdvancedExpanded
     },
     scenarios: state.scenarios
   };
@@ -2578,12 +2471,13 @@ function clearAllData() {
   state.ui.expandedMiners = {};
   state.ui.minersExpanded = false;
   state.ui.capexExpanded = false;
+  state.ui.networkExpanded = false;
+  state.ui.networkAdvancedExpanded = false;
   // Reset to a fresh single default site
   state.sites = [defaultSite()];
   state.ui.activeSiteId = state.sites[0].id;
   state.ui.resultsSiteId = 'all';
   state.ops = { poolFeePct:1.5 };
-  state.tax = { ratePct:0, depreciationYears:5, expenseMinersYear1:false, expenseCapexYear1:false };
   state.ownership = { sharePct:100 };
   state.ui.resultsViewMode = 'company';
   state.network = {
@@ -2718,25 +2612,6 @@ function bindInputs() {
     markDirty(); recalcAndRender();
   });
 
-  // Tax
-  $('#tax-rate').addEventListener('input', (e) => {
-    state.tax.ratePct = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
-    markDirty(); recalcAndRender();
-  });
-  $('#dep-years').addEventListener('input', (e) => {
-    state.tax.depreciationYears = Math.max(1, Math.min(30, parseInt(e.target.value) || 1));
-    markDirty(); recalcAndRender();
-  });
-  $('#tax-miners-y1').addEventListener('change', (e) => {
-    state.tax.expenseMinersYear1 = !!e.target.checked;
-    syncDepYearsEnabled();
-    markDirty(); recalcAndRender();
-  });
-  $('#tax-capex-y1').addEventListener('change', (e) => {
-    state.tax.expenseCapexYear1 = !!e.target.checked;
-    syncDepYearsEnabled();
-    markDirty(); recalcAndRender();
-  });
   $('#ownership-share').addEventListener('input', (e) => {
     let v = parseFloat(e.target.value);
     if (!isFinite(v)) v = 100;
@@ -2745,6 +2620,19 @@ function bindInputs() {
     markDirty();
     renderResultsSiteSelector();
     recalcAndRender();
+  });
+
+  // Section collapse toggles
+  $('#network-header').addEventListener('click', () => {
+    state.ui.networkExpanded = !state.ui.networkExpanded;
+    syncCollapsibleSections();
+    markDirty();
+  });
+  $('#network-advanced-toggle').addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.ui.networkAdvancedExpanded = !state.ui.networkAdvancedExpanded;
+    syncCollapsibleSections();
+    markDirty();
   });
 
   // Add Miner trigger (reveals preset dropdown + Custom button)
@@ -2864,9 +2752,7 @@ function bindInputs() {
 
   // Scenario controls
   $('#save-scenario-btn').addEventListener('click', showSaveScenarioPrompt);
-  $$('.quick-btn[data-quick]').forEach(b => {
-    b.addEventListener('click', () => applyQuickScenario(b.dataset.quick));
-  });
+  renderQuickPresets();
 }
 
 function switchTab(name) {
@@ -3012,20 +2898,7 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
   clearDirty();
   renderTicker();
   refreshLive();
-  // Refresh price every 60s; full live every 5 min
-  setInterval(async () => {
-    const p = await fetchBtcPrice();
-    if (p != null) {
-      state.live.btcPrice = p;
-      if (state.network._priceFromLive !== false) {
-        state.network.btcPrice = p;
-        $('#btc-price').value = Math.round(p);
-        recalcAndRender();
-      }
-      renderTicker();
-    }
-  }, 60000);
-  setInterval(refreshLive, 300000);
+  // Live data is fetched only on initial load — refresh the page to update.
 
   // Helpful first-run nudge
   if (!had) {
