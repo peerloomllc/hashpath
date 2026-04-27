@@ -647,7 +647,7 @@
             <div class="field-group">
               <label class="field-label">BTC price growth</label>
               <div class="field-suffix long" data-suffix="%/mo">
-                <input type="number" class="field-input" id="price-growth" step="0.1" value="0">
+                <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
               </div>
             </div>
           </div>
@@ -888,19 +888,24 @@ const MINER_PRESETS = [
 ];
 
 const QUICK_SCENARIOS = {
+  // BTC's lifetime CAGR is roughly 60% and no rolling 4-year window has been
+  // negative. Scenarios are framed as plausible long-horizon CAGR bands rather
+  // than 12-month stress tests, and difficulty is coupled positively to price
+  // (more miners come online when BTC rallies, fewer when it stalls).
+  'bear': {
+    name: 'Bear',
+    // BTC price ~+15%/yr → ~1.17%/mo compounded; diff +15%/yr (slow miner growth)
+    overrides: { priceGrowthMo: 1.17, diffGrowthYr: 15 }
+  },
   'status-quo': {
     name: 'Status Quo',
-    overrides: { priceGrowthMo: 0, diffGrowthYr: 30 }
+    // BTC price ~+35%/yr → ~2.53%/mo; diff +30%/yr
+    overrides: { priceGrowthMo: 2.53, diffGrowthYr: 30 }
   },
   'bull': {
     name: 'Bull',
-    // BTC price ~+50% over ~12 months → roughly 3.4%/mo compounded; difficulty +20%/yr
-    overrides: { priceGrowthMo: 3.4, diffGrowthYr: 20 }
-  },
-  'bear': {
-    name: 'Bear',
-    // BTC price ~-30% over ~12 months → roughly -2.95%/mo; difficulty +60%/yr
-    overrides: { priceGrowthMo: -2.95, diffGrowthYr: 60 }
+    // BTC price ~+75%/yr → ~4.78%/mo; diff +50%/yr (fleet expansion follows price)
+    overrides: { priceGrowthMo: 4.78, diffGrowthYr: 50 }
   }
 };
 
@@ -921,7 +926,7 @@ const state = {
     blockReward: 3.125,
     nextAdjPct: 0,
     diffGrowthYrPct: 30,
-    priceGrowthMoPct: 0,
+    priceGrowthMoPct: 2.53,   // ~+35%/yr — Status Quo CAGR baseline (see QUICK_SCENARIOS)
     horizonMonths: 36
   },
   ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false },
@@ -1062,7 +1067,7 @@ function applySnapshotData(snap) {
 
   state.network = {
     btcPrice: 95000, difficultyT: 109.78, blockReward: 3.125, nextAdjPct: 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 0, horizonMonths: 36,
+    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, horizonMonths: 36,
     ...(snap.network || {})
   };
   if (snap.ui) {
@@ -2499,7 +2504,7 @@ function clearAllData() {
     difficultyT: state.live.difficulty || 109.78,
     blockReward: 3.125,
     nextAdjPct: state.live.nextAdjPct || 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 0, horizonMonths: 36
+    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, horizonMonths: 36
   };
   syncInputsFromState();
   renderSiteSwitcher();
