@@ -1,0 +1,2754 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HashPath — Bitcoin Mining Profitability</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%230e0c08'/><text x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-size='20' font-style='italic' fill='%23f7931a'>H</text></svg>">
+<meta name="theme-color" content="#0e0c08">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0e0c08; --surface:#181410; --surface2:#1f1a14;
+    --border:#2a241c; --border-light:#36302a;
+    --accent:#f7931a; --accent-dim:#c4730e; --accent-glow:rgba(247,147,26,0.12);
+    --green:#a8d08d; --green-dim:#6a9e52; --green-glow:rgba(168,208,141,0.10);
+    --red:#e07070; --red-dim:#a84f4f; --red-glow:rgba(224,112,112,0.10);
+    --gold:#d4a843; --blue:#6aafcd;
+    --text:#f0e8dc; --text-muted:#8a8070; --text-dim:#5a5040;
+    --mono:'DM Mono',monospace; --serif:'DM Serif Display',serif; --sans:'DM Sans',sans-serif;
+    --radius:6px;
+  }
+  [data-theme="light"] {
+    --bg:#faf6ef; --surface:#ffffff; --surface2:#f2ede4;
+    --border:#d8d0c2; --border-light:#bdb39f;
+    --accent:#c46a00; --accent-dim:#a85700; --accent-glow:rgba(196,106,0,0.10);
+    --green:#3d7a22; --green-dim:#5a9e3a; --green-glow:rgba(61,122,34,0.08);
+    --red:#c0392b; --red-dim:#a83226; --red-glow:rgba(192,57,43,0.08);
+    --gold:#b8860b; --blue:#2874a6;
+    --text:#1a1410; --text-muted:#6a5e4a; --text-dim:#9a8e7a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+  html{overflow-x:hidden}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18px;min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(247,147,26,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(247,147,26,.022) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* ── BTC TICKER BAR ── */
+  .btc-bar{position:fixed;top:0;left:0;right:0;z-index:55;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 14px;padding:7px 24px;border-bottom:1px solid var(--border);background:var(--bg);font-family:var(--mono);font-size:14px}
+  .btc-logo{font-size:18px;color:var(--accent)}
+  .ticker-label{letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+  .ticker-val{color:var(--accent);font-weight:500}
+  .ticker-val.loading{color:var(--text-dim);animation:pulse 1.5s ease-in-out infinite}
+  .ticker-val.pos{color:var(--green)}
+  .ticker-val.neg{color:var(--red)}
+  .ticker-sep{color:var(--text-dim)}
+
+  /* ── HEADER ── */
+  header{position:fixed;top:38px;left:0;right:0;z-index:50;border-bottom:1px solid var(--border);padding:24px 40px 20px;display:flex;align-items:flex-end;justify-content:space-between;background:var(--bg)}
+  .header-left h1{font-family:var(--serif);font-size:38px;font-weight:400;letter-spacing:-.5px;line-height:1}
+  .header-left h1 span{color:var(--accent);font-style:italic}
+  .header-left .subtitle{margin-top:5px;font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+  .header-right{text-align:right}
+  .result-label{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px}
+  .result-value{font-family:var(--serif);font-size:42px;letter-spacing:-1px;color:var(--accent);text-shadow:0 0 40px rgba(247,147,26,.3);transition:all .4s;line-height:1.05}
+  .result-value.negative{color:var(--red);text-shadow:0 0 40px rgba(224,112,112,.3)}
+  .result-sub{font-family:var(--mono);font-size:14px;color:var(--text-muted);margin-top:3px}
+
+  /* ── SUMMARY BAR ── */
+  .summary-bar{position:fixed;top:166px;left:0;right:0;z-index:50;display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);background:var(--surface)}
+  .summary-item{padding:14px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px}
+  .summary-item:last-child{border-right:none}
+  .s-label{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim)}
+  .s-value{font-family:var(--mono);font-size:26px;font-weight:500}
+  .s-value.breakeven{color:var(--accent)}
+  .s-value.breakeven.never{color:var(--red)}
+  .s-value.roi{color:var(--gold)}
+  .s-value.roi.negative{color:var(--red)}
+  .s-value.cost{color:var(--accent)}
+
+  /* ── TAB NAV ── */
+  .tab-nav{position:fixed;top:240px;left:0;right:0;z-index:50;display:flex;justify-content:center;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 32px}
+  .tab-btn{font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:13px 18px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px}
+  .tab-btn:hover{color:var(--text-muted)}
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-spacer{flex:1}
+  .icon-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 10px;border-radius:3px;cursor:pointer;transition:all .15s;margin-left:6px}
+  .icon-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
+
+  /* ── VIEW ── */
+  .view{display:none;position:relative;z-index:10;max-width:1500px;margin:0 auto;padding:296px 28px 120px}
+  .view.active{display:block}
+
+  /* ── SECTION ── */
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both;margin-bottom:18px}
+  .section:nth-child(2){animation-delay:.05s}
+  .section:nth-child(3){animation-delay:.1s}
+  .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2)}
+  .section-name{font-family:var(--mono);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted)}
+  .section-total{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--accent)}
+  .section-body{padding:14px 18px}
+
+  /* ── CALC GRID ── */
+  .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media (max-width:1100px){.calc-grid{grid-template-columns:1fr}}
+
+  /* ── FIELD GRID ── */
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .field-grid.three{grid-template-columns:1fr 1fr 1fr}
+  .field-group{display:flex;flex-direction:column;gap:4px}
+  .field-group.full{grid-column:1/-1}
+  .field-label{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:6px;min-height:18px;line-height:1.2}
+  .field-label .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green-dim);box-shadow:0 0 8px var(--green-glow)}
+  .field-label .live-dot.stale{background:var(--text-dim);box-shadow:none}
+  .field-input{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:15px;padding:7px 10px;outline:none;transition:border-color .15s;width:100%;height:34px}
+  .field-input:focus{border-color:var(--accent-dim)}
+  .field-input::placeholder{color:var(--text-dim)}
+  .field-suffix{position:relative}
+  .field-suffix::after{content:attr(data-suffix);position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--text-dim);pointer-events:none;letter-spacing:.5px}
+  .field-suffix .field-input{padding-right:42px}
+  .field-suffix.long .field-input{padding-right:72px}
+
+  /* ── POWER MODE TOGGLE ── */
+  .power-mode-toggle{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px}
+  .power-mode-toggle button{font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 12px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s}
+  .power-mode-toggle button.active{background:var(--accent-glow);color:var(--accent)}
+
+  /* ── SITE SWITCHER ── */
+  .site-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .site-chip{font-family:var(--mono);font-size:13px;letter-spacing:.5px;padding:6px 12px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text-muted);cursor:pointer;transition:all .15s}
+  .site-chip:hover{color:var(--text);border-color:var(--border-light)}
+  .site-chip.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent-dim)}
+  .add-site-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s}
+  .add-site-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
+  .site-name-row{display:flex;flex-direction:column;gap:4px}
+  .site-name-input-row{display:flex;gap:8px}
+  .site-name-input-row .field-input{flex:1}
+  .site-remove-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:13px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;height:34px}
+  .site-remove-btn:hover{color:var(--red);border-color:var(--red-dim)}
+  .site-remove-btn:disabled{opacity:.4;cursor:not-allowed}
+  .site-remove-btn:disabled:hover{color:var(--text-dim);border-color:var(--border)}
+
+  /* ── RESULTS SITE STRIP (fixed, persistent across tabs) ── */
+  .results-site-strip{position:fixed;top:283px;left:0;right:0;z-index:50;display:none;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
+  body.multisite .results-site-strip{display:flex}
+  body.multisite .view{padding-top:336px}
+  .results-site-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+  .results-site-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .results-site-chip{font-family:var(--mono);font-size:12px;letter-spacing:.5px;padding:3px 10px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text-muted);cursor:pointer;transition:all .15s}
+  .results-site-chip:hover{color:var(--text);border-color:var(--border-light)}
+  .results-site-chip.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent-dim)}
+
+  /* ── MINER LIST ── */
+  .miner-row{border-bottom:1px solid var(--border);transition:background .1s}
+  .miner-row:last-child{border-bottom:none}
+  .miner-row:hover{background:rgba(247,147,26,.02)}
+  .miner-summary{display:grid;grid-template-columns:14px 1fr auto auto auto;align-items:center;gap:10px;padding:10px 16px 10px 32px;cursor:pointer;user-select:none}
+  .miner-expand{font-size:12px;color:var(--text-dim);transition:transform .2s;text-align:center}
+  .miner-expand.open{transform:rotate(90deg)}
+  .miner-name-line{display:flex;flex-direction:column;gap:2px;overflow:hidden}
+  .miner-name{font-size:16px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .miner-meta{font-family:var(--mono);font-size:12px;color:var(--text-dim);letter-spacing:.5px}
+  .miner-units{font-family:var(--mono);font-size:14px;color:var(--text-muted);text-align:right}
+  .miner-cost{font-family:var(--mono);font-size:16px;color:var(--accent);font-weight:500;text-align:right;white-space:nowrap}
+  .miner-delete{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:3px;opacity:0;transition:all .15s}
+  .miner-row:hover .miner-delete{opacity:1}
+  .miner-delete:hover{color:var(--red)}
+  .miner-detail{overflow:hidden;max-height:0;transition:max-height .25s ease}
+  .miner-detail.open{max-height:none}
+  .miner-fields{padding:4px 18px 14px 32px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 14px}
+  .name-row{display:flex;gap:8px;align-items:center}
+  .name-row .field-input{flex:1}
+  .save-preset-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:12px;letter-spacing:.5px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;height:34px}
+  .save-preset-btn:hover{color:var(--gold);border-color:var(--gold)}
+
+  .add-row{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:center}
+  .add-miner-controls{display:flex;gap:8px;align-items:center;justify-content:center}
+  .add-row.expanded .add-miner-trigger{display:none}
+  .add-row:not(.expanded) .add-miner-controls{display:none}
+  .add-miner-trigger{min-width:140px}
+  .add-row-cancel{background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:0 6px;border-radius:3px;transition:color .15s}
+  .add-row-cancel:hover{color:var(--red)}
+  .preset-select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:14px;padding:7px 10px;outline:none;cursor:pointer;height:34px}
+  .preset-select:focus{border-color:var(--accent-dim)}
+  .add-row-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:14px;letter-spacing:1px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s;height:34px}
+  .add-row-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
+
+  .empty-miners{padding:24px 16px;text-align:center;font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:1px}
+
+  /* ── RESULTS TABLE ── */
+  .results-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:15px}
+  .results-table th{text-align:left;padding:8px 14px;color:var(--text-dim);font-weight:400;letter-spacing:1.5px;font-size:12px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2)}
+  .results-table th.r{text-align:right}
+  .results-table td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text-muted)}
+  .results-table td.label{color:var(--text)}
+  .results-table td.r{text-align:right;font-family:var(--mono)}
+  .results-table tr:last-child td{border-bottom:none}
+  .results-table .pos{color:var(--green)}
+  .results-table .neg{color:var(--red)}
+  .results-table .accent{color:var(--accent)}
+  .results-table .total-row td{font-weight:500;background:rgba(247,147,26,.04);border-top:1px solid var(--border)}
+  .results-table .sub{font-size:13px;color:var(--text-dim)}
+
+  /* ── BIG STAT CARD ── */
+  .big-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
+  .big-stat-cell{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)}
+  .big-stat-label{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+  .big-stat-value{font-family:var(--mono);font-size:24px;color:var(--accent);font-weight:500}
+  .big-stat-sub{font-family:var(--mono);font-size:13px;color:var(--text-muted)}
+
+  /* ── FLEET SUMMARY ── */
+  .fleet-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--border);background:var(--surface2)}
+  .fleet-stat{padding:10px 14px;border-right:1px solid var(--border);text-align:center}
+  .fleet-stat:last-child{border-right:none}
+  .fleet-stat-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+  .fleet-stat-value{font-family:var(--mono);font-size:15px;color:var(--text);margin-top:2px}
+
+  /* ── CHARTS ── */
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media (max-width:1100px){.charts-grid{grid-template-columns:1fr}}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both}
+  .chart-card.wide{grid-column:1/-1}
+  .chart-card-header{padding:14px 18px 10px;border-bottom:1px solid var(--border)}
+  .chart-card-title{font-family:var(--mono);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted)}
+  .chart-card-sub{font-family:var(--mono);font-size:13px;color:var(--text-dim);margin-top:3px}
+  .chart-body{padding:18px;height:320px;position:relative}
+  .chart-body.tall{height:380px}
+
+  /* ── SCENARIOS ── */
+  .scenarios-controls{display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border)}
+  .scenarios-controls .quick-btn{font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:6px 12px;border-radius:4px;border:1px solid var(--border-light);background:transparent;color:var(--text-muted);cursor:pointer;transition:all .15s}
+  .scenarios-controls .quick-btn:hover{color:var(--accent);border-color:var(--accent-dim);background:var(--accent-glow)}
+  .scenarios-controls .quick-btn.primary{color:var(--accent);border-color:var(--accent-dim)}
+  .scenarios-controls .spacer{flex:1}
+
+  .scenario-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:14px}
+  .scenario-table th,.scenario-table td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.03);text-align:right;color:var(--text-muted)}
+  .scenario-table th{background:var(--surface2);text-transform:uppercase;font-size:12px;letter-spacing:1.5px;font-weight:400;color:var(--text-dim);border-bottom:1px solid var(--border)}
+  .scenario-table th:first-child,.scenario-table td:first-child{text-align:left}
+  .scenario-table td.scen-name{color:var(--text)}
+  .scenario-table .scen-current{background:var(--accent-glow)}
+  .scenario-table .scen-current td:first-child{color:var(--accent);font-weight:500}
+  .scenario-table .scen-delete{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0 4px;opacity:.4;transition:all .15s}
+  .scenario-table .scen-delete:hover{color:var(--red);opacity:1}
+  .scenario-table .scen-load{background:none;border:1px solid var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:3px;cursor:pointer;transition:all .15s}
+  .scenario-table .scen-load:hover{color:var(--accent);border-color:var(--accent-dim)}
+
+  .scenarios-empty{padding:36px 18px;text-align:center;font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:1px}
+
+  /* ── INLINE NAME PROMPT ── */
+  .name-prompt-row{display:flex;gap:8px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center}
+  .name-prompt-row input{flex:1;background:var(--surface2);border:1px solid var(--accent-dim);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:15px;padding:7px 10px;outline:none}
+  .name-prompt-row button{font-family:var(--mono);font-size:13px;padding:6px 12px;border-radius:4px;cursor:pointer;border:none}
+  .name-prompt-row .save{background:var(--accent);color:var(--bg)}
+  .name-prompt-row .cancel{background:transparent;border:1px solid var(--border-light);color:var(--text-dim)}
+
+  /* ── CAPEX SUBSECTION ── */
+  .capex-subsection{border-top:1px solid var(--border);background:rgba(255,255,255,.01)}
+  .capex-header{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;user-select:none;transition:background .1s}
+  .capex-header:hover{background:rgba(255,255,255,.02)}
+  .capex-header.static{grid-template-columns:1fr auto;cursor:default}
+  .capex-header.static:hover{background:transparent}
+  .capex-toggle-arrow{font-size:12px;color:var(--text-dim);transition:transform .2s;text-align:center}
+  .capex-toggle-arrow.open{transform:rotate(90deg)}
+  .capex-label{font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted)}
+  .capex-total{font-family:var(--mono);font-size:15px;color:var(--accent);font-weight:500}
+  .capex-body{overflow:hidden;max-height:0;transition:max-height .25s ease}
+  .capex-body.open{max-height:none}
+  .capex-list{padding:4px 16px 4px 32px}
+  .capex-row{display:grid;grid-template-columns:1fr 140px 28px;gap:8px;align-items:center;padding:5px 0}
+  .capex-row .field-input{height:32px;font-size:14px}
+  .capex-row .capex-amount{text-align:right}
+  .capex-delete{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;padding:2px 4px;border-radius:3px;opacity:0;transition:all .15s}
+  .capex-row:hover .capex-delete{opacity:1}
+  .capex-delete:hover{color:var(--red)}
+  .capex-add-btn{display:block;margin:6px auto 12px;background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:14px;letter-spacing:1px;padding:6px 14px;height:34px;min-width:140px;border-radius:4px;cursor:pointer;transition:all .15s}
+  .capex-add-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
+  .capex-empty{padding:8px 0;font-family:var(--mono);font-size:13px;color:var(--text-dim);letter-spacing:.5px}
+
+  /* ── SAVE BAR (bottom menu) ── */
+  .save-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 40px;background:var(--bg);border-top:1px solid var(--border)}
+  .save-hint{font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:1px}
+  .save-hint span{color:var(--accent-dim)}
+  .btn-group{display:flex;gap:8px}
+  .btn{font-family:var(--mono);font-size:14px;letter-spacing:1px;padding:8px 16px;border-radius:4px;cursor:pointer;border:none;transition:all .15s}
+  .btn-ghost{background:transparent;border:1px solid var(--border-light);color:var(--text-muted)}
+  .btn-ghost:hover{border-color:var(--text-dim);color:var(--text)}
+  .btn-about{background:transparent;border:1px solid var(--accent-dim);color:var(--accent);position:relative}
+  .btn-about:hover{background:var(--accent-glow);border-color:var(--accent)}
+  .btn-about .about-icon{display:inline-block;width:14px;height:14px;border:1.5px solid currentColor;border-radius:50%;text-align:center;line-height:13px;font-size:14px;font-style:italic;font-family:Georgia,serif;margin-right:4px}
+  .btn-primary{background:var(--accent);color:var(--bg);font-weight:500}
+  .btn-primary:hover{background:#fdb755}
+  .changed-indicator{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-right:6px;opacity:0;transition:opacity .3s;vertical-align:middle}
+  .changed-indicator.visible{opacity:1}
+
+  /* ── SETTINGS MODAL ── */
+  #settings-modal{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
+  #settings-modal.hidden{display:none}
+  .settings-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:32px 36px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:18px;animation:fadeUp .2s ease}
+  .settings-title{font-family:var(--serif);font-size:25px;font-weight:400;letter-spacing:-.3px;text-align:center}
+  .settings-section{display:flex;flex-direction:column;gap:8px}
+  .settings-section-label{font-family:var(--mono);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);text-align:center}
+  .settings-help{font-family:var(--mono);font-size:13px;color:var(--text-dim);line-height:1.5}
+  .settings-btn{background:transparent;border:1px solid var(--border-light);color:var(--text-muted);font-family:var(--mono);font-size:14px;padding:9px 14px;border-radius:4px;cursor:pointer;transition:all .15s;width:100%;text-align:center}
+  .settings-btn:hover{border-color:var(--accent-dim);color:var(--accent)}
+  .settings-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+  .settings-btn.danger{border-color:var(--red-dim);color:var(--red)}
+  .settings-btn.danger:hover{background:var(--red-glow)}
+  .settings-divider{border:none;border-top:1px solid var(--border);margin:2px 0}
+
+  /* ── ABOUT MODAL ── */
+  #about-modal{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
+  #about-modal.hidden{display:none}
+  .about-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:32px 36px;width:100%;max-width:460px;display:flex;flex-direction:column;gap:18px;animation:fadeUp .2s ease;max-height:90vh;overflow-y:auto}
+  .about-section-label{font-family:var(--mono);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent-dim);text-align:center;margin-bottom:2px}
+  .about-body{font-family:var(--mono);font-size:14px;color:var(--text-muted);line-height:1.7}
+  .about-body strong{color:var(--text)}
+  .about-divider{border:none;border-top:1px solid var(--border);margin:0}
+  .about-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:15px;color:var(--accent);text-decoration:none;padding:8px 14px;border:1px solid var(--accent-dim);border-radius:5px;transition:background .15s;width:100%;justify-content:center;box-sizing:border-box}
+  .about-link:hover{background:var(--accent-glow)}
+  .about-links-row{display:flex;gap:8px;flex-wrap:wrap}
+  .about-links-row .about-link{flex:1;min-width:120px}
+  .about-close-btn{background:transparent;border:1px solid var(--border-light);color:var(--text-muted);font-family:var(--mono);font-size:14px;letter-spacing:1px;padding:9px 16px;border-radius:4px;cursor:pointer;transition:all .15s;width:100%}
+  .about-close-btn:hover{border-color:var(--text-dim);color:var(--text)}
+  .ln-panel{margin-top:10px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;animation:fadeUp .2s ease}
+  .ln-qr{border-radius:6px}
+  .ln-addr{font-family:var(--mono);font-size:15px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:6px 12px;width:100%;text-align:center;cursor:pointer;transition:border-color .15s;box-sizing:border-box;word-break:break-all}
+  .ln-addr:hover{border-color:var(--accent-dim)}
+  .ln-hint{font-family:var(--mono);font-size:13px;color:var(--text-dim);text-align:center}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);z-index:200;background:var(--surface2);border:1px solid var(--border-light);color:var(--text);font-family:var(--mono);font-size:14px;padding:9px 16px;border-radius:5px;opacity:0;transition:all .2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.success{border-color:var(--accent-dim);color:var(--accent)}
+  .toast.error{border-color:var(--red-dim);color:var(--red)}
+
+  /* ── MOBILE ── */
+  @media (max-width:780px){
+    body{font-size:16px}
+    .btc-bar{position:static;font-size:12px;gap:4px 10px;padding:6px 10px}
+    header{position:static;padding:18px 18px 14px;flex-direction:column;align-items:flex-start;gap:12px}
+    .header-left h1{font-size:30px}
+    .header-right{text-align:left}
+    .result-value{font-size:34px}
+    .summary-bar{position:static;grid-template-columns:1fr 1fr 1fr}
+    .s-value{font-size:18px}
+    .tab-nav{position:static;padding:0 12px;flex-wrap:wrap}
+    .tab-btn{font-size:13px;padding:11px 12px}
+    .view{padding:24px 14px 60px}
+    .calc-grid{gap:14px}
+    .miner-fields{grid-template-columns:1fr 1fr;padding-left:18px}
+    .field-grid{grid-template-columns:1fr}
+    .field-grid.three{grid-template-columns:1fr 1fr}
+    .big-stat-row{grid-template-columns:1fr}
+    .fleet-summary{grid-template-columns:1fr 1fr}
+    .fleet-stat:nth-child(2n){border-right:none}
+    .save-bar{padding:10px 12px;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;justify-content:center}
+    .save-hint{display:none}
+    .capex-row{grid-template-columns:1fr 110px 24px}
+  }
+</style>
+</head>
+<body>
+
+<!-- BTC TICKER BAR -->
+<div class="btc-bar">
+  <span class="btc-logo">₿</span>
+  <span class="ticker-label">BTC/USD</span>
+  <span class="ticker-val loading" id="ticker-price">—</span>
+  <span class="ticker-sep">·</span>
+  <span class="ticker-label">DIFF</span>
+  <span class="ticker-val loading" id="ticker-diff">—</span>
+  <span class="ticker-sep">·</span>
+  <span class="ticker-label">NEXT ADJ</span>
+  <span class="ticker-val loading" id="ticker-next-adj">—</span>
+  <span class="ticker-sep">·</span>
+  <span class="ticker-label">HALVING</span>
+  <span class="ticker-val loading" id="ticker-halving">—</span>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <h1>Hash<span>Path</span></h1>
+    <div class="subtitle">Bitcoin Mining Profitability</div>
+  </div>
+  <div class="header-right">
+    <div class="result-label">Net Profit / Month</div>
+    <div class="result-value" id="result-net-monthly">—</div>
+    <div class="result-sub" id="result-net-monthly-sats">—</div>
+  </div>
+</header>
+
+<!-- SUMMARY BAR -->
+<div class="summary-bar">
+  <div class="summary-item">
+    <div class="s-label">Break-even</div>
+    <div class="s-value breakeven" id="kpi-breakeven">—</div>
+  </div>
+  <div class="summary-item">
+    <div class="s-label">ROI at horizon</div>
+    <div class="s-value roi" id="kpi-roi">—</div>
+  </div>
+  <div class="summary-item">
+    <div class="s-label">All-in cost / BTC</div>
+    <div class="s-value cost" id="kpi-cost-per-btc">—</div>
+  </div>
+</div>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="calc">Calculator</button>
+  <button class="tab-btn" data-tab="charts">Charts</button>
+  <button class="tab-btn" data-tab="scenarios">Scenarios</button>
+</nav>
+
+<!-- RESULTS SITE STRIP (visible when 2+ sites) -->
+<div class="results-site-strip" id="results-site-strip">
+  <span class="results-site-label">View:</span>
+  <div class="results-site-chips" id="results-site-chips"></div>
+</div>
+
+<!-- CALCULATOR VIEW -->
+<main class="view active" id="view-calc">
+  <div class="calc-grid">
+
+    <!-- LEFT: INPUTS -->
+    <div>
+      <!-- SITE SWITCHER -->
+      <section class="section site-section">
+        <div class="section-header">
+          <span class="section-name">Site</span>
+          <button class="add-site-btn" id="add-site-btn">+ Add Site</button>
+        </div>
+        <div class="section-body">
+          <div class="site-chips" id="site-chips"></div>
+          <div class="site-name-row">
+            <label class="field-label" for="site-name-input">Active site name</label>
+            <div class="site-name-input-row">
+              <input type="text" class="field-input" id="site-name-input" placeholder="Site name">
+              <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CAPEX -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-name">CapEx</span>
+          <span class="section-total" id="hw-capex-total">$0</span>
+        </div>
+        <div class="capex-subsection miners-subsection">
+          <div class="capex-header" id="miners-header">
+            <span class="capex-toggle-arrow" id="miners-arrow">▶</span>
+            <span class="capex-label">Miners</span>
+            <span class="capex-total" id="miners-subtotal">$0</span>
+          </div>
+          <div class="capex-body" id="miners-body">
+            <div class="miners-list" id="miners-list"></div>
+            <div class="add-row" id="add-miner-row">
+              <button class="add-row-btn add-miner-trigger" id="add-miner-trigger">+ Add Miner</button>
+              <div class="add-miner-controls">
+                <select class="preset-select" id="preset-select"></select>
+                <button class="add-row-btn" id="add-custom-btn">+ Custom</button>
+                <button class="add-row-cancel" id="cancel-add-miner" title="Cancel">&#10005;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="capex-subsection">
+          <div class="capex-header" id="capex-header">
+            <span class="capex-toggle-arrow" id="capex-arrow">▶</span>
+            <span class="capex-label">Other CapEx (racks, install, infra)</span>
+            <span class="capex-total" id="capex-subtotal">$0</span>
+          </div>
+          <div class="capex-body" id="capex-body">
+            <div class="capex-list" id="capex-list"></div>
+            <button class="capex-add-btn" id="capex-add-btn">+ Add CapEx</button>
+          </div>
+        </div>
+        <div class="fleet-summary">
+          <div class="fleet-stat">
+            <div class="fleet-stat-label">Hashrate</div>
+            <div class="fleet-stat-value" id="fleet-hashrate">— TH/s</div>
+          </div>
+          <div class="fleet-stat">
+            <div class="fleet-stat-label">Power</div>
+            <div class="fleet-stat-value" id="fleet-power">— kW</div>
+          </div>
+          <div class="fleet-stat">
+            <div class="fleet-stat-label">Efficiency</div>
+            <div class="fleet-stat-value" id="fleet-efficiency">— J/TH</div>
+          </div>
+          <div class="fleet-stat">
+            <div class="fleet-stat-label">Units</div>
+            <div class="fleet-stat-value" id="fleet-units">0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- OPERATING -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-name">Operating</span>
+        </div>
+        <div class="section-body">
+          <div class="power-mode-toggle" id="power-mode-toggle">
+            <button data-mode="kwh" class="active">$/kWh (direct)</button>
+            <button data-mode="colo">$/kW/month (hosted)</button>
+          </div>
+          <div class="field-grid">
+            <div class="field-group" id="field-elec-rate-wrap">
+              <label class="field-label">Electricity rate</label>
+              <div class="field-suffix" data-suffix="$/kWh">
+                <input type="number" class="field-input" id="elec-rate" min="0" step="0.001" value="0.07">
+              </div>
+            </div>
+            <div class="field-group" id="field-colo-rate-wrap" style="display:none">
+              <label class="field-label">Hosting rate</label>
+              <div class="field-suffix long" data-suffix="$/kW/mo">
+                <input type="number" class="field-input" id="colo-rate" min="0" step="1" value="100">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Pool fee</label>
+              <div class="field-suffix" data-suffix="%">
+                <input type="number" class="field-input" id="pool-fee" min="0" max="100" step="0.1" value="1.5">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Uptime</label>
+              <div class="field-suffix" data-suffix="%">
+                <input type="number" class="field-input" id="uptime" min="0" max="100" step="0.1" value="98">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Maintenance overhead</label>
+              <div class="field-suffix" data-suffix="%">
+                <input type="number" class="field-input" id="maintenance" min="0" max="100" step="0.1" value="2">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NETWORK / MARKET -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-name">Network & Market</span>
+        </div>
+        <div class="section-body">
+          <div class="field-grid">
+            <div class="field-group">
+              <label class="field-label">BTC price <span class="live-dot" id="dot-btc"></span></label>
+              <div class="field-suffix" data-suffix="USD">
+                <input type="number" class="field-input" id="btc-price" min="0" step="100">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Network difficulty <span class="live-dot" id="dot-diff"></span></label>
+              <div class="field-suffix" data-suffix="T">
+                <input type="number" class="field-input" id="difficulty" min="0" step="0.01">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Block reward</label>
+              <div class="field-suffix" data-suffix="BTC">
+                <input type="number" class="field-input" id="block-reward" min="0" step="0.0001" value="3.125">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Next adjustment <span class="live-dot" id="dot-adj"></span></label>
+              <div class="field-suffix" data-suffix="%">
+                <input type="number" class="field-input" id="next-adj" step="0.01" value="0">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Long-term diff growth</label>
+              <div class="field-suffix long" data-suffix="%/yr">
+                <input type="number" class="field-input" id="diff-growth" step="0.1" value="30">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">BTC price growth</label>
+              <div class="field-suffix long" data-suffix="%/mo">
+                <input type="number" class="field-input" id="price-growth" step="0.1" value="0">
+              </div>
+            </div>
+            <div class="field-group full">
+              <label class="field-label">Time horizon</label>
+              <div class="field-suffix long" data-suffix="months">
+                <input type="number" class="field-input" id="horizon" min="1" max="120" step="1" value="36">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT: OUTPUTS -->
+    <div>
+      <section class="section">
+        <div class="section-header">
+          <span class="section-name">Results</span>
+          <span class="section-total" id="results-headline">$0</span>
+        </div>
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th class="r">Per month</th>
+              <th class="r">Lifetime <span id="lifetime-months-th" class="sub"></span></th>
+            </tr>
+          </thead>
+          <tbody id="results-tbody"></tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-name">Bitcoin Lens</span>
+        </div>
+        <div class="big-stat-row">
+          <div class="big-stat-cell">
+            <div class="big-stat-label">Sats per $ mined</div>
+            <div class="big-stat-value" id="sats-per-dollar">—</div>
+            <div class="big-stat-sub" id="sats-per-dollar-sub">—</div>
+          </div>
+          <div class="big-stat-cell">
+            <div class="big-stat-label">BTC mined / month</div>
+            <div class="big-stat-value" id="btc-per-month">—</div>
+            <div class="big-stat-sub" id="btc-per-month-sub">—</div>
+          </div>
+          <div class="big-stat-cell">
+            <div class="big-stat-label">Lifetime BTC</div>
+            <div class="big-stat-value" id="btc-lifetime">—</div>
+            <div class="big-stat-sub" id="btc-lifetime-sub">—</div>
+          </div>
+          <div class="big-stat-cell">
+            <div class="big-stat-label">Marginal cost / BTC</div>
+            <div class="big-stat-value" id="marginal-cost">—</div>
+            <div class="big-stat-sub" id="marginal-cost-sub">power + ops only</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</main>
+
+<!-- CHARTS VIEW -->
+<main class="view" id="view-charts">
+  <div class="charts-grid">
+    <div class="chart-card wide">
+      <div class="chart-card-header">
+        <div class="chart-card-title">Cumulative profit</div>
+        <div class="chart-card-sub" id="chart-cum-sub">—</div>
+      </div>
+      <div class="chart-body tall"><canvas id="chart-cum"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">Sensitivity: BTC price</div>
+        <div class="chart-card-sub">Lifetime net profit vs. BTC price (held flat)</div>
+      </div>
+      <div class="chart-body"><canvas id="chart-sens-price"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">Sensitivity: difficulty growth</div>
+        <div class="chart-card-sub">Lifetime net profit vs. annual difficulty growth %</div>
+      </div>
+      <div class="chart-body"><canvas id="chart-sens-diff"></canvas></div>
+    </div>
+    <div class="chart-card wide">
+      <div class="chart-card-header">
+        <div class="chart-card-title">Sensitivity: power cost</div>
+        <div class="chart-card-sub">Lifetime net profit vs. electricity rate $/kWh</div>
+      </div>
+      <div class="chart-body"><canvas id="chart-sens-power"></canvas></div>
+    </div>
+  </div>
+</main>
+
+<!-- SCENARIOS VIEW -->
+<main class="view" id="view-scenarios">
+  <section class="section">
+    <div class="scenarios-controls">
+      <button class="quick-btn primary" id="save-scenario-btn">+ Save current as scenario</button>
+      <span class="spacer"></span>
+      <button class="quick-btn" data-quick="status-quo">Load: Status Quo</button>
+      <button class="quick-btn" data-quick="bull">Load: Bull</button>
+      <button class="quick-btn" data-quick="bear">Load: Bear</button>
+    </div>
+    <div id="name-prompt"></div>
+    <div id="scenarios-content"></div>
+  </section>
+
+  <div class="chart-card wide" style="margin-top:18px">
+    <div class="chart-card-header">
+      <div class="chart-card-title">Cumulative profit — overlay</div>
+      <div class="chart-card-sub">Current scenario in orange; saved scenarios overlaid</div>
+    </div>
+    <div class="chart-body tall"><canvas id="chart-scenarios"></canvas></div>
+  </div>
+</main>
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <div class="save-hint">All data saved locally — <span>never leaves this device</span></div>
+  <div class="btn-group">
+    <button class="btn btn-about" id="open-about-btn"><span class="about-icon">i</span> About</button>
+    <button class="btn btn-ghost" id="open-settings-btn" title="Settings">&#9881; Settings</button>
+    <button class="btn btn-primary" id="save-btn"><span class="changed-indicator" id="changed-dot"></span>Save &#10003;</button>
+  </div>
+</div>
+
+<!-- HIDDEN FILE INPUT FOR JSON IMPORT -->
+<input type="file" id="json-import-file" accept=".json" style="display:none">
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" class="hidden">
+  <div class="settings-card">
+    <div class="settings-title">Settings</div>
+
+    <div class="settings-section">
+      <div class="settings-section-label">Theme</div>
+      <div style="display:flex;gap:8px">
+        <button class="settings-btn" id="theme-dark-btn" style="flex:1">&#127769; Dark</button>
+        <button class="settings-btn" id="theme-light-btn" style="flex:1">&#9728; Light</button>
+      </div>
+    </div>
+
+    <hr class="settings-divider">
+
+    <div class="settings-section">
+      <div class="settings-section-label">Export Projection (CSV)</div>
+      <button class="settings-btn" id="settings-csv-btn">Export Monthly Projection as CSV</button>
+      <div class="settings-help">Downloads a row-per-month projection of BTC mined, revenue, costs, and net profit over the selected horizon.</div>
+    </div>
+
+    <hr class="settings-divider">
+
+    <div class="settings-section">
+      <div class="settings-section-label">Backup / Restore</div>
+      <div style="display:flex;gap:8px">
+        <button class="settings-btn" id="settings-export-json" style="flex:1">Export JSON</button>
+        <button class="settings-btn" id="settings-import-json" style="flex:1">Import JSON</button>
+      </div>
+      <div class="settings-help">Export saves an unencrypted backup of all inputs, miners, CapEx items, and saved scenarios. Import replaces the current state.</div>
+    </div>
+
+    <hr class="settings-divider">
+
+    <div class="settings-section">
+      <div class="settings-section-label">Clear Data</div>
+      <button class="settings-btn danger" id="settings-clear">Clear All Data</button>
+      <div class="settings-help">Removes all miners, CapEx items, scenarios, and inputs. Cannot be undone.</div>
+    </div>
+
+    <hr class="settings-divider">
+    <button class="settings-btn" id="settings-close">Close</button>
+  </div>
+</div>
+
+<!-- ABOUT MODAL -->
+<div id="about-modal" class="hidden">
+  <div class="about-card">
+    <div class="settings-title">About HashPath</div>
+    <hr class="about-divider">
+    <div>
+      <div class="about-section-label">Design Philosophy</div>
+      <div class="about-body">
+        HashPath is a <strong>single HTML file</strong> with zero dependencies. No build system, no frameworks, no servers, no accounts, no tracking. Open it in any browser, on any OS.
+        <br><br>
+        Your inputs and saved scenarios live in your browser's local storage and never leave your device. The only outbound calls are to <strong>CoinGecko</strong> for BTC price and <strong>mempool.space</strong> for network difficulty and the halving countdown. Back up by exporting JSON; migrate by copying the HTML file and your export.
+        <br><br>
+        Simple. Private. Durable.
+      </div>
+    </div>
+    <hr class="about-divider">
+    <div>
+      <div class="about-section-label">Support Development</div>
+      <div class="about-body" style="margin-bottom:8px">HashPath is free and open source. If you find it useful, please consider supporting its development.</div>
+      <div class="about-links-row">
+        <a class="about-link" href="#" id="donate-btc-link" title="Donate BTC via Lightning">&#9889; Donate BTC</a>
+        <a class="about-link" href="https://buymeacoffee.com/peerloomllc" target="_blank" rel="noopener">&#36; Donate USD</a>
+      </div>
+      <div id="ln-panel" class="ln-panel" style="display:none"></div>
+    </div>
+    <hr class="about-divider">
+    <div>
+      <div class="about-section-label">Learn About Bitcoin</div>
+      <div class="about-body" style="margin-bottom:8px">New to Bitcoin? The Satoshi Nakamoto Institute has a free, concise crash course explaining how it works and why it matters.</div>
+      <a class="about-link" href="https://nakamotoinstitute.org/crash-course/" target="_blank" rel="noopener">Bitcoin Crash Course &#8599;</a>
+    </div>
+    <hr class="about-divider">
+    <div>
+      <div class="about-section-label">Contact</div>
+      <div class="about-links-row">
+        <a class="about-link" href="mailto:peerloomllc@proton.me?subject=%5BHashPath%5D%20Feedback" title="Send email">&#9993; Email</a>
+        <a class="about-link" href="https://github.com/peerloomllc/cache/issues" target="_blank" rel="noopener">&#128027; Report Issue</a>
+      </div>
+    </div>
+    <hr class="about-divider">
+    <div style="text-align:center">
+      <a class="about-link" href="https://peerloomllc.com" target="_blank" rel="noopener" style="display:inline-flex">PeerLoom LLC &#8599;</a>
+    </div>
+    <button class="about-close-btn" id="about-close">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ────────────────────────────────────────────────────────────────────────────
+// Constants & presets
+// ────────────────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'hashpath-v1';
+const NEXT_HALVING_BLOCK = 1050000;
+const POST_HALVING_REWARD = 1.5625;
+const FALLBACK_HALVING_DATE = new Date('2028-04-19T00:00:00Z');
+
+// Approximate specs. User can edit any field after picking.
+const MINER_PRESETS = [
+  { id:'s21-pro',    name:'Antminer S21 Pro',     hashrate:234, watts:3531, cost:6500 },
+  { id:'s21-hyd',    name:'Antminer S21 Hyd',     hashrate:335, watts:5360, cost:9500 },
+  { id:'s21',        name:'Antminer S21',         hashrate:200, watts:3500, cost:4500 },
+  { id:'s19xp',      name:'Antminer S19 XP',      hashrate:140, watts:3010, cost:2500 },
+  { id:'s19jpro',    name:'Antminer S19j Pro',    hashrate:104, watts:3068, cost:1400 },
+  { id:'t21',        name:'Antminer T21',         hashrate:190, watts:3610, cost:3000 },
+  { id:'m60s',       name:'Whatsminer M60S',      hashrate:186, watts:3441, cost:3500 },
+  { id:'m63s',       name:'Whatsminer M63S Hyd',  hashrate:390, watts:7215, cost:9000 },
+  { id:'m66s',       name:'Whatsminer M66S Hyd',  hashrate:298, watts:5513, cost:7500 },
+  { id:'a1466',      name:'Avalon A1466',         hashrate:150, watts:3230, cost:2200 }
+];
+
+const QUICK_SCENARIOS = {
+  'status-quo': {
+    name: 'Status Quo',
+    overrides: { priceGrowthMo: 0, diffGrowthYr: 30 }
+  },
+  'bull': {
+    name: 'Bull',
+    // BTC price ~+50% over ~12 months → roughly 3.4%/mo compounded; difficulty +20%/yr
+    overrides: { priceGrowthMo: 3.4, diffGrowthYr: 20 }
+  },
+  'bear': {
+    name: 'Bear',
+    // BTC price ~-30% over ~12 months → roughly -2.95%/mo; difficulty +60%/yr
+    overrides: { priceGrowthMo: -2.95, diffGrowthYr: 60 }
+  }
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────────────────────────────────────
+
+const state = {
+  miners: [],          // each miner has siteId
+  capexItems: [],      // each capex item has siteId
+  sites: [],           // [{ id, name, power:{mode,elecRate,coloRate}, ops:{uptimePct,maintenancePct} }]
+  customPresets: [],   // user-saved miner presets [{id, name, cost, hashrate, watts}]
+  ops:   { poolFeePct:1.5 },   // pool fee stays global
+  network: {
+    btcPrice: 95000,
+    difficultyT: 109.78,         // in trillions
+    blockReward: 3.125,
+    nextAdjPct: 0,
+    diffGrowthYrPct: 30,
+    priceGrowthMoPct: 0,
+    horizonMonths: 36
+  },
+  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', expandedMiners:{}, minersExpanded:false, capexExpanded:false },
+  scenarios: [],
+  // Cached live data (informational only — display in ticker)
+  live: {
+    btcPrice: null, difficulty: null, nextAdjPct: null,
+    nextAdjBlocks: null, nextAdjEta: null,
+    halvingBlocksLeft: null, halvingDate: null,
+    fetchedAt: null
+  }
+};
+
+function defaultSite(name = 'Site 1') {
+  return {
+    id: 'site-' + Math.random().toString(36).slice(2,9),
+    name,
+    power: { mode:'kwh', elecRate:0.07, coloRate:100 },
+    ops: { uptimePct:98, maintenancePct:2 }
+  };
+}
+
+function ensureSiteIntegrity() {
+  if (!Array.isArray(state.sites) || state.sites.length === 0) {
+    state.sites = [defaultSite()];
+  }
+  if (!state.ui.activeSiteId || !state.sites.find(s => s.id === state.ui.activeSiteId)) {
+    state.ui.activeSiteId = state.sites[0].id;
+  }
+  if (state.ui.resultsSiteId && state.ui.resultsSiteId !== 'all' && !state.sites.find(s => s.id === state.ui.resultsSiteId)) {
+    state.ui.resultsSiteId = 'all';
+  }
+  if (!state.ui.resultsSiteId) state.ui.resultsSiteId = 'all';
+  for (const m of state.miners) {
+    if (!m.siteId || !state.sites.find(s => s.id === m.siteId)) m.siteId = state.ui.activeSiteId;
+  }
+  for (const it of state.capexItems) {
+    if (!it.siteId || !state.sites.find(s => s.id === it.siteId)) it.siteId = state.ui.activeSiteId;
+  }
+}
+
+function activeSite() {
+  return state.sites.find(s => s.id === state.ui.activeSiteId) || state.sites[0];
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Persistence + dirty tracking
+// ────────────────────────────────────────────────────────────────────────────
+
+let dirty = false;
+
+function persist() {
+  try {
+    const snap = {
+      miners: state.miners,
+      capexItems: state.capexItems,
+      sites: state.sites,
+      customPresets: state.customPresets,
+      ops: state.ops,
+      network: state.network,
+      ui: {
+        theme: state.ui.theme,
+        activeSiteId: state.ui.activeSiteId,
+        resultsSiteId: state.ui.resultsSiteId,
+        expandedMiners: state.ui.expandedMiners,
+        minersExpanded: state.ui.minersExpanded,
+        capexExpanded: state.ui.capexExpanded
+      },
+      scenarios: state.scenarios
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snap));
+    return true;
+  } catch (e) { return false; }
+}
+
+function markDirty() {
+  dirty = true;
+  const dot = document.getElementById('changed-dot');
+  if (dot) dot.classList.add('visible');
+}
+
+function clearDirty() {
+  dirty = false;
+  const dot = document.getElementById('changed-dot');
+  if (dot) dot.classList.remove('visible');
+}
+
+// Normalize any legacy snapshot shape (no sites, has top-level power/ops) into the
+// new shape with state.sites. Returns a deep-cloned snapshot.
+function migrateSnapshot(snap) {
+  const out = JSON.parse(JSON.stringify(snap || {}));
+  // CapEx legacy
+  if (!Array.isArray(out.capexItems)) {
+    if (typeof out.otherCapex === 'number' && out.otherCapex > 0) {
+      out.capexItems = [{ id: 'cx-' + Math.random().toString(36).slice(2,9), name:'Other CapEx', amount: out.otherCapex }];
+    } else {
+      out.capexItems = [];
+    }
+  }
+  out.miners = out.miners || [];
+
+  const legacyOps = out.ops || {};
+  if (!Array.isArray(out.sites) || out.sites.length === 0) {
+    const siteId = 'site-' + Math.random().toString(36).slice(2,9);
+    out.sites = [{
+      id: siteId,
+      name: 'Site 1',
+      power: { mode:'kwh', elecRate:0.07, coloRate:100, ...(out.power || {}) },
+      ops: {
+        uptimePct: legacyOps.uptimePct ?? 98,
+        maintenancePct: legacyOps.maintenancePct ?? 2
+      }
+    }];
+    out.miners = out.miners.map(m => m.siteId ? m : { ...m, siteId });
+    out.capexItems = out.capexItems.map(it => it.siteId ? it : { ...it, siteId });
+  }
+  out.ops = { poolFeePct: legacyOps.poolFeePct ?? 1.5 };
+  delete out.power;
+  return out;
+}
+
+function applySnapshotData(snap) {
+  const m = migrateSnapshot(snap);
+  state.miners = m.miners;
+  state.capexItems = m.capexItems;
+  state.sites = m.sites;
+  state.ops = m.ops;
+
+  state.network = {
+    btcPrice: 95000, difficultyT: 109.78, blockReward: 3.125, nextAdjPct: 0,
+    diffGrowthYrPct: 30, priceGrowthMoPct: 0, horizonMonths: 36,
+    ...(snap.network || {})
+  };
+  if (snap.ui) {
+    if (snap.ui.theme) state.ui.theme = snap.ui.theme;
+    state.ui.expandedMiners = snap.ui.expandedMiners || {};
+    state.ui.minersExpanded = !!snap.ui.minersExpanded;
+    state.ui.capexExpanded = !!snap.ui.capexExpanded;
+    if (snap.ui.activeSiteId) state.ui.activeSiteId = snap.ui.activeSiteId;
+    if (snap.ui.resultsSiteId) state.ui.resultsSiteId = snap.ui.resultsSiteId;
+  }
+  // Migrate scenario snapshots so legacy ones project correctly
+  state.scenarios = (snap.scenarios || []).map(sc => ({
+    ...sc,
+    snapshot: migrateSnapshot(sc.snapshot)
+  }));
+  state.customPresets = Array.isArray(snap.customPresets) ? snap.customPresets : [];
+  ensureSiteIntegrity();
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+    applySnapshotData(snap);
+    return true;
+  } catch (e) { return false; }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────────────────
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+const uid = () => 'm-' + Math.random().toString(36).slice(2,10);
+
+const fmtUSD = (n, opts={}) => {
+  if (!isFinite(n)) return '—';
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (opts.compact && abs >= 1e6) return sign + '$' + (abs/1e6).toFixed(2) + 'M';
+  if (opts.compact && abs >= 1e3) return sign + '$' + (abs/1e3).toFixed(1) + 'k';
+  return sign + '$' + abs.toLocaleString('en-US', { maximumFractionDigits:opts.dp ?? 0, minimumFractionDigits:opts.dp ?? 0 });
+};
+const fmtPct = (n, dp=1) => isFinite(n) ? (n*100).toFixed(dp) + '%' : '—';
+const fmtBTC = (n, dp=4) => isFinite(n) ? n.toLocaleString('en-US', { maximumFractionDigits:dp, minimumFractionDigits:dp }) + ' ₿' : '—';
+const fmtSats = (n) => isFinite(n) ? Math.round(n).toLocaleString('en-US') + ' sats' : '—';
+const fmtNum = (n, dp=2) => isFinite(n) ? n.toLocaleString('en-US', { maximumFractionDigits:dp }) : '—';
+
+function showToast(msg, kind='') {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { t.className = 'toast ' + kind; }, 1800);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Live data
+// ────────────────────────────────────────────────────────────────────────────
+
+async function fetchBtcPrice() {
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+    if (!r.ok) throw new Error('cg');
+    const j = await r.json();
+    const p = j?.bitcoin?.usd;
+    if (typeof p === 'number') return p;
+  } catch (e) {}
+  try {
+    const r = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot');
+    if (!r.ok) throw new Error('cb');
+    const j = await r.json();
+    const p = parseFloat(j?.data?.amount);
+    if (isFinite(p)) return p;
+  } catch (e) {}
+  return null;
+}
+
+async function fetchDifficultyAdjustment() {
+  try {
+    const r = await fetch('https://mempool.space/api/v1/difficulty-adjustment');
+    if (!r.ok) throw new Error('da');
+    const j = await r.json();
+    return {
+      change: j.difficultyChange,         // signed % (e.g. 2.4 = +2.4%)
+      remainingBlocks: j.remainingBlocks,
+      estimatedRetargetDate: j.estimatedRetargetDate,
+      remainingTime: j.remainingTime
+    };
+  } catch (e) { return null; }
+}
+
+async function fetchHashrateAndDifficulty() {
+  try {
+    const r = await fetch('https://mempool.space/api/v1/mining/hashrate/3d');
+    if (!r.ok) throw new Error('hr');
+    const j = await r.json();
+    return {
+      currentDifficulty: j.currentDifficulty,
+      currentHashrate: j.currentHashrate
+    };
+  } catch (e) { return null; }
+}
+
+async function fetchTipHeight() {
+  try {
+    const r = await fetch('https://mempool.space/api/blocks/tip/height');
+    if (!r.ok) throw new Error('th');
+    const t = await r.text();
+    const h = parseInt(t, 10);
+    return isFinite(h) ? h : null;
+  } catch (e) { return null; }
+}
+
+async function refreshLive() {
+  // Run in parallel
+  const [price, adj, hd, height] = await Promise.all([
+    fetchBtcPrice(),
+    fetchDifficultyAdjustment(),
+    fetchHashrateAndDifficulty(),
+    fetchTipHeight()
+  ]);
+
+  state.live.fetchedAt = Date.now();
+
+  if (price != null) {
+    state.live.btcPrice = price;
+    // Only auto-fill the input if user hasn't deviated from the previous live value
+    const inp = $('#btc-price');
+    if (state.network._priceFromLive !== false) {
+      state.network.btcPrice = price;
+      inp.value = Math.round(price);
+      state.network._priceFromLive = true;
+    }
+    $('#dot-btc').classList.remove('stale');
+  } else {
+    $('#dot-btc').classList.add('stale');
+  }
+
+  if (hd && isFinite(hd.currentDifficulty)) {
+    const diffT = hd.currentDifficulty / 1e12;
+    state.live.difficulty = diffT;
+    const inp = $('#difficulty');
+    if (state.network._diffFromLive !== false) {
+      state.network.difficultyT = diffT;
+      inp.value = diffT.toFixed(2);
+      state.network._diffFromLive = true;
+    }
+    $('#dot-diff').classList.remove('stale');
+  } else {
+    $('#dot-diff').classList.add('stale');
+  }
+
+  if (adj) {
+    state.live.nextAdjPct = adj.change;
+    state.live.nextAdjBlocks = adj.remainingBlocks;
+    state.live.nextAdjEta = adj.estimatedRetargetDate;
+    const inp = $('#next-adj');
+    if (state.network._adjFromLive !== false) {
+      state.network.nextAdjPct = adj.change;
+      inp.value = adj.change.toFixed(2);
+      state.network._adjFromLive = true;
+    }
+    $('#dot-adj').classList.remove('stale');
+  } else {
+    $('#dot-adj').classList.add('stale');
+  }
+
+  if (height != null) {
+    state.live.halvingBlocksLeft = NEXT_HALVING_BLOCK - height;
+    const blocksLeft = state.live.halvingBlocksLeft;
+    if (blocksLeft > 0) {
+      const secondsLeft = blocksLeft * 600;
+      state.live.halvingDate = new Date(Date.now() + secondsLeft * 1000);
+    } else {
+      // Already past the halving — reduce default reward suggestion
+      state.live.halvingDate = null;
+    }
+  }
+
+  renderTicker();
+  recalcAndRender();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Calc core
+// ────────────────────────────────────────────────────────────────────────────
+
+function fleetTotals(s = state, siteId = null) {
+  let units = 0, hashrate = 0, watts = 0, capex = 0;
+  for (const m of (s.miners || [])) {
+    if (siteId != null && m.siteId !== siteId) continue;
+    units += m.units;
+    hashrate += m.units * m.hashrate;       // TH/s
+    watts += m.units * m.watts;             // W
+    capex += m.units * m.cost;              // $
+  }
+  const otherCapex = (s.capexItems || [])
+    .filter(it => siteId == null || it.siteId === siteId)
+    .reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
+  return { units, hashrate, watts, capex: capex + otherCapex, otherCapex };
+}
+
+// Rough months-until-halving from now. Uses live blocks-left if available, else fallback date.
+function monthsUntilHalving() {
+  if (state.live.halvingDate) {
+    const diffMs = state.live.halvingDate.getTime() - Date.now();
+    if (diffMs <= 0) return 0;
+    return diffMs / (1000 * 86400 * 30.4375);
+  }
+  const diffMs = FALLBACK_HALVING_DATE.getTime() - Date.now();
+  return diffMs > 0 ? diffMs / (1000 * 86400 * 30.4375) : 0;
+}
+
+// Project month-by-month, applying difficulty growth, BTC price growth, and halving.
+// If siteId is null, projects across all sites (per-site math summed each month).
+// If siteId is provided, projects only that site.
+function project(s, siteId = null) {
+  const opts = s || state;
+  const allSites = opts.sites || [];
+  const sites = siteId == null ? allSites : allSites.filter(site => site.id === siteId);
+
+  // Pre-compute per-site fleet + cost params
+  const sitePerf = sites.map(site => {
+    const ft = fleetTotals(opts, site.id);
+    return {
+      hashrate: ft.hashrate,
+      watts: ft.watts,
+      capex: ft.capex,
+      units: ft.units,
+      elecRate: +site.power.elecRate || 0,
+      coloRate: +site.power.coloRate || 0,
+      mode: site.power.mode || 'kwh',
+      uptime: ((+site.ops.uptimePct) || 0) / 100,
+      maintPct: ((+site.ops.maintenancePct) || 0) / 100
+    };
+  });
+
+  const aggregate = sitePerf.reduce((acc, sp) => ({
+    hashrate: acc.hashrate + sp.hashrate,
+    watts: acc.watts + sp.watts,
+    capex: acc.capex + sp.capex,
+    units: acc.units + sp.units
+  }), { hashrate:0, watts:0, capex:0, units:0 });
+
+  const ths = aggregate.hashrate;
+  const totalW = aggregate.watts;
+  const totalCapex = aggregate.capex;
+  const units = aggregate.units;
+
+  const poolFee = (+opts.ops.poolFeePct || 0) / 100;
+
+  let difficulty = (+opts.network.difficultyT || 0) * 1e12;
+  let btcPrice = +opts.network.btcPrice || 0;
+  let reward = +opts.network.blockReward || 0;
+  const nextAdj = (+opts.network.nextAdjPct || 0) / 100;
+  const monthlyDiffMul = Math.pow(1 + (+opts.network.diffGrowthYrPct || 0) / 100, 1/12);
+  const monthlyPriceMul = 1 + (+opts.network.priceGrowthMoPct || 0) / 100;
+  const horizon = Math.max(1, Math.min(120, Math.round(+opts.network.horizonMonths || 1)));
+
+  // Pre-apply next-adjustment to month 1 difficulty
+  difficulty *= (1 + nextAdj);
+
+  const monthsToHalving = monthsUntilHalving();
+
+  let cumulative = -totalCapex;
+  let breakevenMonth = null;
+  const rows = [];
+  let totals = { btc:0, revenue:0, power:0, fees:0, net:0 };
+
+  // Static per-month pieces
+  const daysInMonth = 30.4375;
+
+  for (let i = 1; i <= horizon; i++) {
+    if (monthsToHalving > 0 && i > monthsToHalving) reward = POST_HALVING_REWARD;
+
+    let monthBtc = 0, monthRevenue = 0, monthPower = 0, monthPool = 0, monthMaint = 0;
+
+    for (const sp of sitePerf) {
+      const effHashesPerSec = sp.hashrate * 1e12 * sp.uptime;
+      const btcPerDay = (effHashesPerSec * 86400 * reward) / (difficulty * Math.pow(2, 32));
+      const btcThisMonth = btcPerDay * daysInMonth;
+      const grossRevenue = btcThisMonth * btcPrice;
+      const poolPaid = grossRevenue * poolFee;
+
+      let powerCost;
+      if (sp.mode === 'kwh') {
+        const kwhPerMonth = (sp.watts / 1000) * 24 * sp.uptime * daysInMonth;
+        powerCost = kwhPerMonth * sp.elecRate;
+      } else {
+        const kw = sp.watts / 1000;
+        powerCost = kw * sp.coloRate;
+      }
+
+      const maintCost = grossRevenue * sp.maintPct;
+      monthBtc += btcThisMonth;
+      monthRevenue += grossRevenue;
+      monthPower += powerCost;
+      monthPool += poolPaid;
+      monthMaint += maintCost;
+    }
+
+    const monthFees = monthPool + monthMaint;
+    const monthNet = monthRevenue - monthFees - monthPower;
+
+    cumulative += monthNet;
+    if (breakevenMonth === null && cumulative >= 0) breakevenMonth = i;
+
+    totals.btc += monthBtc;
+    totals.revenue += monthRevenue;
+    totals.power += monthPower;
+    totals.fees += monthFees;
+    totals.net += monthNet;
+
+    rows.push({
+      month: i,
+      btcMined: monthBtc,
+      btcPrice,
+      difficulty,
+      reward,
+      revenue: monthRevenue,
+      powerCost: monthPower,
+      poolPaid: monthPool,
+      maintCost: monthMaint,
+      netProfit: monthNet,
+      cumulative
+    });
+
+    // Apply growth for next month
+    difficulty *= monthlyDiffMul;
+    btcPrice *= monthlyPriceMul;
+  }
+
+  const horizonValue = cumulative;
+  const lifetimeProfit = horizonValue;        // already includes -capex
+  const roi = totalCapex > 0 ? lifetimeProfit / totalCapex : 0;
+  const allInCostPerBtc = totals.btc > 0 ? (totalCapex + totals.power + totals.fees) / totals.btc : Infinity;
+  const marginalCostPerBtc = totals.btc > 0 ? (totals.power + totals.fees) / totals.btc : Infinity;
+
+  return {
+    rows,
+    totals,
+    capex: totalCapex,
+    horizon,
+    fleet: { units, hashrate: ths, watts: totalW, efficiency: ths > 0 ? totalW / ths : null },
+    breakevenMonth,
+    horizonProfit: lifetimeProfit,
+    roi,
+    allInCostPerBtc,
+    marginalCostPerBtc,
+    monthsToHalving
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Rendering
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderTicker() {
+  const tp = $('#ticker-price');
+  const td = $('#ticker-diff');
+  const ta = $('#ticker-next-adj');
+  const th = $('#ticker-halving');
+
+  if (state.live.btcPrice != null) {
+    tp.textContent = '$' + Math.round(state.live.btcPrice).toLocaleString('en-US');
+    tp.className = 'ticker-val';
+  } else {
+    tp.textContent = '—'; tp.className = 'ticker-val loading';
+  }
+
+  if (state.live.difficulty != null) {
+    td.textContent = state.live.difficulty.toFixed(2) + 'T';
+    td.className = 'ticker-val';
+  } else { td.textContent = '—'; td.className = 'ticker-val loading'; }
+
+  if (state.live.nextAdjPct != null) {
+    const sign = state.live.nextAdjPct >= 0 ? '+' : '';
+    let txt = sign + state.live.nextAdjPct.toFixed(2) + '%';
+    if (state.live.nextAdjBlocks != null) {
+      const days = Math.round((state.live.nextAdjBlocks * 600) / 86400);
+      txt += ' in ' + days + 'd';
+    }
+    ta.textContent = txt;
+    ta.className = 'ticker-val ' + (state.live.nextAdjPct >= 0 ? 'pos' : 'neg');
+  } else { ta.textContent = '—'; ta.className = 'ticker-val loading'; }
+
+  if (state.live.halvingDate) {
+    const days = Math.max(0, Math.round((state.live.halvingDate - Date.now()) / 86400000));
+    let s;
+    if (days >= 365) s = (days / 365).toFixed(1) + 'y';
+    else if (days >= 30) s = Math.round(days / 30) + 'mo';
+    else s = days + 'd';
+    th.textContent = s + ' (~' + state.live.halvingDate.toISOString().slice(0,10) + ')';
+    th.className = 'ticker-val';
+  } else {
+    const fb = FALLBACK_HALVING_DATE;
+    const days = Math.max(0, Math.round((fb - Date.now()) / 86400000));
+    th.textContent = (days/365).toFixed(1) + 'y (est)';
+    th.className = 'ticker-val';
+  }
+}
+
+function renderMinerList() {
+  const list = $('#miners-list');
+  const minersOnSite = state.miners.filter(m => m.siteId === state.ui.activeSiteId);
+  const minersTotal = minersOnSite.reduce((s, m) => s + ((m.units || 0) * (m.cost || 0)), 0);
+  const sub = $('#miners-subtotal');
+  if (sub) sub.textContent = fmtUSD(minersTotal);
+  const mArrow = $('#miners-arrow');
+  const mBody = $('#miners-body');
+  if (mArrow) mArrow.classList.toggle('open', !!state.ui.minersExpanded);
+  if (mBody) mBody.classList.toggle('open', !!state.ui.minersExpanded);
+  if (minersOnSite.length === 0) {
+    list.innerHTML = '<div class="empty-miners">No miners yet — add a preset or custom rig below</div>';
+    return;
+  }
+  list.innerHTML = '';
+  for (const m of minersOnSite) {
+    const row = document.createElement('div');
+    row.className = 'miner-row';
+    const expanded = !!state.ui.expandedMiners[m.id];
+    const totalCost = (m.units || 0) * (m.cost || 0);
+    const totalHash = (m.units || 0) * (m.hashrate || 0);
+    const totalW = (m.units || 0) * (m.watts || 0);
+    const eff = (m.hashrate > 0) ? (m.watts / m.hashrate).toFixed(1) : '—';
+    row.innerHTML = `
+      <div class="miner-summary" data-id="${m.id}">
+        <span class="miner-expand ${expanded?'open':''}">▶</span>
+        <div class="miner-name-line">
+          <div class="miner-name">${escapeHtml(m.name || 'Custom miner')}</div>
+          <div class="miner-meta">${fmtNum(totalHash, 1)} TH/s · ${fmtNum(totalW/1000, 2)} kW · ${eff} J/TH</div>
+        </div>
+        <div class="miner-units">×${m.units||0}</div>
+        <div class="miner-cost">${fmtUSD(totalCost)}</div>
+        <button class="miner-delete" data-del="${m.id}" title="Remove">✕</button>
+      </div>
+      <div class="miner-detail ${expanded?'open':''}">
+        <div class="miner-fields">
+          <div class="field-group full">
+            <label class="field-label">Name / model</label>
+            <div class="name-row">
+              <input class="field-input" type="text" data-field="name" data-id="${m.id}" value="${escapeAttr(m.name || '')}">
+              <button class="save-preset-btn" data-save-preset="${m.id}" title="Save these specs as a reusable preset">&#9733; Save as preset</button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Units</label>
+            <input class="field-input" type="number" min="0" step="1" data-field="units" data-id="${m.id}" value="${m.units || 0}">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Cost / unit</label>
+            <div class="field-suffix" data-suffix="USD"><input class="field-input" type="number" min="0" step="50" data-field="cost" data-id="${m.id}" value="${m.cost || 0}"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Hashrate</label>
+            <div class="field-suffix" data-suffix="TH/s"><input class="field-input" type="number" min="0" step="1" data-field="hashrate" data-id="${m.id}" value="${m.hashrate || 0}"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Power draw</label>
+            <div class="field-suffix" data-suffix="W"><input class="field-input" type="number" min="0" step="10" data-field="watts" data-id="${m.id}" value="${m.watts || 0}"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Efficiency</label>
+            <div class="field-suffix long" data-suffix="J/TH"><input class="field-input" type="number" value="${eff}" disabled></div>
+          </div>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  // Wire up
+  list.querySelectorAll('.miner-summary').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.matches('[data-del]')) return;
+      const id = el.dataset.id;
+      state.ui.expandedMiners[id] = !state.ui.expandedMiners[id];
+      markDirty();
+      renderMinerList();
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = b.dataset.del;
+      state.miners = state.miners.filter(m => m.id !== id);
+      delete state.ui.expandedMiners[id];
+      markDirty();
+      renderMinerList();
+      recalcAndRender();
+    });
+  });
+  list.querySelectorAll('[data-save-preset]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = b.dataset.savePreset;
+      const m = state.miners.find(x => x.id === id);
+      if (m) saveAsPreset(m);
+    });
+  });
+  list.querySelectorAll('input[data-field]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.dataset.id;
+      const f = inp.dataset.field;
+      const m = state.miners.find(x => x.id === id);
+      if (!m) return;
+      if (f === 'name') m.name = inp.value;
+      else m[f] = parseFloat(inp.value) || 0;
+      markDirty();
+      // Light-touch re-render: update only summary line so focus isn't lost on the input
+      updateMinerSummary(id);
+      const newMinersTotal = state.miners
+        .filter(x => x.siteId === state.ui.activeSiteId)
+        .reduce((s, x) => s + ((x.units || 0) * (x.cost || 0)), 0);
+      const subEl = $('#miners-subtotal');
+      if (subEl) subEl.textContent = fmtUSD(newMinersTotal);
+      recalcAndRender();
+    });
+  });
+}
+
+function refreshPresetDropdown() {
+  const sel = $('#preset-select');
+  if (!sel) return;
+  const builtinOpts = MINER_PRESETS
+    .map(p => `<option value="${p.id}">${escapeHtml(p.name)} — ${p.hashrate} TH/s · ${p.watts} W</option>`)
+    .join('');
+  const savedOpts = state.customPresets
+    .map(p => `<option value="${p.id}">&#9733; ${escapeHtml(p.name)} — ${p.hashrate} TH/s · ${p.watts} W</option>`)
+    .join('');
+  let html = '<option value="">Pick a preset...</option>';
+  html += '<optgroup label="Built-in">' + builtinOpts + '</optgroup>';
+  if (savedOpts) html += '<optgroup label="Saved">' + savedOpts + '</optgroup>';
+  sel.innerHTML = html;
+}
+
+function saveAsPreset(m) {
+  const name = String(m.name || '').trim() || 'Custom miner';
+  const hashrate = +m.hashrate || 0;
+  const watts = +m.watts || 0;
+  const cost = +m.cost || 0;
+  if (hashrate <= 0) {
+    showToast('Set hashrate before saving as preset', 'error');
+    return;
+  }
+  const idx = state.customPresets.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+  if (idx >= 0) {
+    state.customPresets[idx] = { ...state.customPresets[idx], name, cost, hashrate, watts };
+    showToast('Updated preset: ' + name, 'success');
+  } else {
+    state.customPresets.push({
+      id: 'cp-' + Math.random().toString(36).slice(2,9),
+      name, cost, hashrate, watts
+    });
+    showToast('Saved preset: ' + name, 'success');
+  }
+  markDirty();
+  refreshPresetDropdown();
+}
+
+function updateMinerSummary(id) {
+  const m = state.miners.find(x => x.id === id);
+  if (!m) return;
+  const row = document.querySelector(`.miner-summary[data-id="${id}"]`);
+  if (!row) return;
+  const totalCost = (m.units || 0) * (m.cost || 0);
+  const totalHash = (m.units || 0) * (m.hashrate || 0);
+  const totalW = (m.units || 0) * (m.watts || 0);
+  const eff = (m.hashrate > 0) ? (m.watts / m.hashrate).toFixed(1) : '—';
+  row.querySelector('.miner-name').textContent = m.name || 'Custom miner';
+  row.querySelector('.miner-meta').textContent = `${fmtNum(totalHash,1)} TH/s · ${fmtNum(totalW/1000,2)} kW · ${eff} J/TH`;
+  row.querySelector('.miner-units').textContent = '×' + (m.units || 0);
+  row.querySelector('.miner-cost').textContent = fmtUSD(totalCost);
+  // Update efficiency field in detail (disabled input)
+  const detail = row.parentElement.querySelector('.miner-detail');
+  if (detail) {
+    const effInp = detail.querySelector('input[disabled]');
+    if (effInp) effInp.value = eff;
+  }
+}
+
+function renderHardwareSummary(p) {
+  $('#hw-capex-total').textContent = fmtUSD(p.capex);
+  $('#fleet-hashrate').textContent = fmtNum(p.fleet.hashrate, 1) + ' TH/s';
+  $('#fleet-power').textContent = fmtNum(p.fleet.watts/1000, 2) + ' kW';
+  $('#fleet-efficiency').textContent = p.fleet.efficiency != null ? p.fleet.efficiency.toFixed(1) + ' J/TH' : '—';
+  $('#fleet-units').textContent = p.fleet.units;
+}
+
+function renderResults(p) {
+  // Headline
+  const headline = $('#result-net-monthly');
+  const sub = $('#result-net-monthly-sats');
+  const lifetimeMonths = $('#lifetime-months-th');
+  lifetimeMonths.textContent = '(' + p.horizon + ' mo)';
+
+  if (p.fleet.hashrate <= 0) {
+    headline.textContent = '—';
+    headline.className = 'result-value';
+    sub.textContent = 'Add at least one miner to start';
+    $('#kpi-breakeven').textContent = '—';
+    $('#kpi-breakeven').className = 's-value breakeven';
+    $('#kpi-roi').textContent = '—';
+    $('#kpi-roi').className = 's-value roi';
+    $('#kpi-cost-per-btc').textContent = '—';
+    $('#results-tbody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:24px">Add a miner to see results</td></tr>';
+    $('#sats-per-dollar').textContent = '—';
+    $('#sats-per-dollar-sub').textContent = '—';
+    $('#btc-per-month').textContent = '—';
+    $('#btc-per-month-sub').textContent = '—';
+    $('#btc-lifetime').textContent = '—';
+    $('#btc-lifetime-sub').textContent = '—';
+    $('#marginal-cost').textContent = '—';
+    $('#results-headline').textContent = '$0';
+    return;
+  }
+
+  // Use month 1 as the "current" monthly net
+  const month1 = p.rows[0];
+  headline.textContent = fmtUSD(month1.netProfit);
+  headline.className = 'result-value' + (month1.netProfit < 0 ? ' negative' : '');
+  const monthSats = month1.netProfit > 0 && state.network.btcPrice > 0
+    ? Math.round((month1.netProfit / state.network.btcPrice) * 1e8)
+    : 0;
+  sub.textContent = month1.netProfit > 0
+    ? '≈ ' + monthSats.toLocaleString('en-US') + ' sats / mo at current price'
+    : (month1.netProfit < 0 ? 'unprofitable at month 1' : '—');
+
+  // KPIs
+  const kBe = $('#kpi-breakeven');
+  if (p.breakevenMonth == null) {
+    kBe.textContent = 'Never';
+    kBe.className = 's-value breakeven never';
+  } else {
+    kBe.textContent = p.breakevenMonth + ' mo';
+    kBe.className = 's-value breakeven';
+  }
+
+  const kRoi = $('#kpi-roi');
+  kRoi.textContent = fmtPct(p.roi);
+  kRoi.className = 's-value roi' + (p.roi < 0 ? ' negative' : '');
+
+  $('#kpi-cost-per-btc').textContent = isFinite(p.allInCostPerBtc) ? fmtUSD(p.allInCostPerBtc) : '—';
+  $('#results-headline').textContent = fmtUSD(p.horizonProfit);
+
+  // Per-month and lifetime totals
+  // Use month 1 figures as the "per month" representative
+  const m1 = p.rows[0];
+  const totalRevenue = p.totals.revenue;
+  const totalPower = p.totals.power;
+  const totalFees = p.totals.fees;
+  const totalNet = p.totals.net;
+  const lifetimeBtc = p.totals.btc;
+
+  const tbody = $('#results-tbody');
+  tbody.innerHTML = `
+    <tr>
+      <td class="label">BTC mined</td>
+      <td class="r accent">${fmtBTC(m1.btcMined, 5)}</td>
+      <td class="r accent">${fmtBTC(lifetimeBtc, 4)}</td>
+    </tr>
+    <tr>
+      <td class="label">Gross revenue</td>
+      <td class="r">${fmtUSD(m1.revenue)}</td>
+      <td class="r">${fmtUSD(totalRevenue)}</td>
+    </tr>
+    <tr>
+      <td class="label">Power cost</td>
+      <td class="r neg">${fmtUSD(-m1.powerCost)}</td>
+      <td class="r neg">${fmtUSD(-totalPower)}</td>
+    </tr>
+    <tr>
+      <td class="label">Pool + maintenance</td>
+      <td class="r neg">${fmtUSD(-(m1.poolPaid + m1.maintCost))}</td>
+      <td class="r neg">${fmtUSD(-totalFees)}</td>
+    </tr>
+    <tr>
+      <td class="label">Operating profit</td>
+      <td class="r ${m1.netProfit>=0?'pos':'neg'}">${fmtUSD(m1.netProfit)}</td>
+      <td class="r ${totalNet>=0?'pos':'neg'}">${fmtUSD(totalNet)}</td>
+    </tr>
+    <tr>
+      <td class="label">Less CapEx</td>
+      <td class="r sub">—</td>
+      <td class="r neg">${fmtUSD(-p.capex)}</td>
+    </tr>
+    <tr class="total-row">
+      <td class="label">Net (after CapEx)</td>
+      <td class="r ${m1.netProfit>=0?'pos':'neg'}">${fmtUSD(m1.netProfit)}</td>
+      <td class="r ${p.horizonProfit>=0?'pos':'neg'}">${fmtUSD(p.horizonProfit)}</td>
+    </tr>
+  `;
+
+  // Bitcoin Lens
+  // Sats per dollar of all-in cost
+  const satsPerDollar = isFinite(p.allInCostPerBtc) && p.allInCostPerBtc > 0
+    ? (1e8 / p.allInCostPerBtc) : 0;
+  const marketSatsPerDollar = state.network.btcPrice > 0 ? 1e8 / state.network.btcPrice : 0;
+  $('#sats-per-dollar').textContent = satsPerDollar > 0 ? Math.round(satsPerDollar).toLocaleString('en-US') : '—';
+  $('#sats-per-dollar-sub').textContent = (marketSatsPerDollar > 0)
+    ? 'market: ' + Math.round(marketSatsPerDollar).toLocaleString('en-US') + ' / $'
+    : '—';
+
+  $('#btc-per-month').textContent = fmtBTC(m1.btcMined, 5);
+  $('#btc-per-month-sub').textContent = '≈ ' + Math.round(m1.btcMined * 1e8).toLocaleString('en-US') + ' sats';
+
+  $('#btc-lifetime').textContent = fmtBTC(lifetimeBtc, 4);
+  $('#btc-lifetime-sub').textContent = '≈ ' + Math.round(lifetimeBtc * 1e8).toLocaleString('en-US') + ' sats';
+
+  $('#marginal-cost').textContent = isFinite(p.marginalCostPerBtc) ? fmtUSD(p.marginalCostPerBtc) : '—';
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Charts
+// ────────────────────────────────────────────────────────────────────────────
+
+const chartRefs = {};
+
+function chartColors() {
+  const cs = getComputedStyle(document.documentElement);
+  return {
+    accent: cs.getPropertyValue('--accent').trim() || '#f7931a',
+    green: cs.getPropertyValue('--green').trim() || '#a8d08d',
+    red: cs.getPropertyValue('--red').trim() || '#e07070',
+    gold: cs.getPropertyValue('--gold').trim() || '#d4a843',
+    blue: cs.getPropertyValue('--blue').trim() || '#6aafcd',
+    text: cs.getPropertyValue('--text').trim() || '#f0e8dc',
+    textMuted: cs.getPropertyValue('--text-muted').trim() || '#8a8070',
+    textDim: cs.getPropertyValue('--text-dim').trim() || '#5a5040',
+    border: cs.getPropertyValue('--border').trim() || '#2a241c',
+    surface: cs.getPropertyValue('--surface').trim() || '#181410'
+  };
+}
+
+function commonChartOpts() {
+  const c = chartColors();
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode:'index', intersect:false },
+    plugins: {
+      legend: { labels: { color: c.textMuted, font:{ family:'DM Mono', size:12 } } },
+      tooltip: {
+        backgroundColor: c.surface,
+        borderColor: c.border, borderWidth:1,
+        titleColor: c.text, bodyColor: c.textMuted,
+        titleFont:{ family:'DM Mono', size:13 },
+        bodyFont:{ family:'DM Mono', size:13 }
+      }
+    },
+    scales: {
+      x: { ticks: { color: c.textDim, font:{ family:'DM Mono', size:11 } }, grid: { color: c.border } },
+      y: { ticks: { color: c.textDim, font:{ family:'DM Mono', size:11 }, callback: (v) => fmtUSD(v, { compact:true }) }, grid: { color: c.border } }
+    }
+  };
+}
+
+function destroyChart(name) {
+  if (chartRefs[name]) { chartRefs[name].destroy(); delete chartRefs[name]; }
+}
+
+function hexAlpha(hex, alpha) {
+  let h = String(hex || '').trim().replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (h.length !== 6) return `rgba(247,147,26,${alpha})`;
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function renderCharts(p) {
+  if (!window.Chart) return;
+  const c = chartColors();
+
+  // Cumulative profit — stacked per-site when "All" is selected with 2+ sites
+  destroyChart('cum');
+  const labels = p.rows.map(r => 'M' + r.month);
+  const isStacked = state.ui.resultsSiteId === 'all' && state.sites.length > 1;
+
+  let datasets;
+  if (isStacked) {
+    const palette = [c.accent, c.green, c.gold, c.blue, c.red];
+    datasets = state.sites.map((site, i) => {
+      const sp = project(state, site.id);
+      const color = palette[i % palette.length];
+      return {
+        label: site.name || ('Site ' + (i + 1)),
+        data: sp.rows.map(r => r.cumulative),
+        borderColor: color,
+        backgroundColor: hexAlpha(color, 0.18),
+        fill: true,
+        tension: 0.2,
+        pointRadius: 0,
+        borderWidth: 1.5
+      };
+    });
+  } else {
+    datasets = [{
+      label: 'Cumulative net (USD)',
+      data: p.rows.map(r => r.cumulative),
+      borderColor: c.accent,
+      backgroundColor: 'rgba(247,147,26,0.10)',
+      fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2
+    }];
+  }
+
+  const cumSub = p.breakevenMonth != null
+    ? `Break-even at month ${p.breakevenMonth} · horizon ${p.horizon} mo`
+    : `No break-even within ${p.horizon} mo`;
+  $('#chart-cum-sub').textContent = isStacked ? (cumSub + ' · stacked by site') : cumSub;
+
+  const cumOpts = commonChartOpts();
+  if (isStacked) cumOpts.scales.y.stacked = true;
+  chartRefs.cum = new Chart($('#chart-cum'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: cumOpts
+  });
+
+  // Sensitivity charts honor the View selector
+  const sensSiteId = state.ui.resultsSiteId === 'all' ? null : state.ui.resultsSiteId;
+  const sensSite = sensSiteId ? state.sites.find(s => s.id === sensSiteId) : null;
+
+  // Sensitivity: BTC price
+  destroyChart('sensPrice');
+  const basePrice = +state.network.btcPrice || 1;
+  const priceMultipliers = [];
+  for (let m = 0.4; m <= 2.61; m += 0.1) priceMultipliers.push(parseFloat(m.toFixed(1)));
+  const priceProfits = priceMultipliers.map(mult => {
+    const s = cloneState(); s.network.btcPrice = basePrice * mult;
+    return project(s, sensSiteId).horizonProfit;
+  });
+  chartRefs.sensPrice = new Chart($('#chart-sens-price'), {
+    type:'line',
+    data:{
+      labels: priceMultipliers.map(m => '$' + Math.round(basePrice * m / 1000) + 'k'),
+      datasets:[{ label:'Lifetime net', data: priceProfits, borderColor: c.accent, backgroundColor:'rgba(247,147,26,0.10)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 }]
+    },
+    options: commonChartOpts()
+  });
+
+  // Sensitivity: difficulty growth
+  destroyChart('sensDiff');
+  const diffRates = [-10, 0, 10, 20, 30, 40, 50, 60, 80, 100];
+  const diffProfits = diffRates.map(r => {
+    const s = cloneState(); s.network.diffGrowthYrPct = r;
+    return project(s, sensSiteId).horizonProfit;
+  });
+  chartRefs.sensDiff = new Chart($('#chart-sens-diff'), {
+    type:'line',
+    data:{
+      labels: diffRates.map(r => r + '%/yr'),
+      datasets:[{ label:'Lifetime net', data: diffProfits, borderColor: c.gold, backgroundColor:'rgba(212,168,67,0.12)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 }]
+    },
+    options: commonChartOpts()
+  });
+
+  // Sensitivity: power cost
+  // - "All" view: applies rate uniformly across all sites
+  // - Per-site view: only that site's rate (project filters internally)
+  destroyChart('sensPower');
+  const baseRate = +((sensSite || activeSite())?.power.elecRate) || 0.07;
+  const powerRates = [];
+  for (let r = 0.02; r <= 0.20001; r += 0.01) powerRates.push(parseFloat(r.toFixed(3)));
+  const powerProfits = powerRates.map(rate => {
+    const s = cloneState();
+    s.sites.forEach(site => {
+      if (sensSiteId && site.id !== sensSiteId) return;
+      site.power.mode = 'kwh';
+      site.power.elecRate = rate;
+    });
+    return project(s, sensSiteId).horizonProfit;
+  });
+  const opts = commonChartOpts();
+  opts.scales.x.ticks.callback = function(v, idx) { return '$' + powerRates[idx].toFixed(2); };
+  chartRefs.sensPower = new Chart($('#chart-sens-power'), {
+    type:'line',
+    data:{
+      labels: powerRates.map(r => '$' + r.toFixed(2)),
+      datasets:[
+        { label:'Lifetime net', data: powerProfits, borderColor: c.green, backgroundColor:'rgba(168,208,141,0.12)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 },
+        { label:'Current rate', data: powerRates.map((r, i) => Math.abs(r - baseRate) < 0.005 ? powerProfits[i] : null), borderColor:c.accent, backgroundColor:c.accent, pointRadius:5, showLine:false }
+      ]
+    },
+    options: opts
+  });
+}
+
+function cloneState() {
+  return {
+    miners: state.miners,
+    capexItems: state.capexItems,
+    sites: state.sites.map(s => ({ ...s, power: { ...s.power }, ops: { ...s.ops } })),
+    ops: { ...state.ops },
+    network: { ...state.network }
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Scenarios
+// ────────────────────────────────────────────────────────────────────────────
+
+function snapshotState() {
+  // Deep copy of the parts that define a scenario
+  return JSON.parse(JSON.stringify({
+    miners: state.miners,
+    capexItems: state.capexItems,
+    sites: state.sites,
+    ops: state.ops,
+    network: state.network
+  }));
+}
+
+function applyScenarioSnapshot(snap) {
+  const m = migrateSnapshot(snap);
+  state.miners = m.miners;
+  state.capexItems = m.capexItems;
+  state.sites = m.sites;
+  state.ops = m.ops;
+  state.ui.activeSiteId = state.sites[0].id;
+  state.ui.resultsSiteId = 'all';
+
+  state.network = { ...state.network, ...(snap.network || {}) };
+  // Mark live-overrides as user-set so they aren't overwritten on next live refresh
+  state.network._priceFromLive = false;
+  state.network._diffFromLive = false;
+  state.network._adjFromLive = false;
+  ensureSiteIntegrity();
+  syncInputsFromState();
+  renderSiteSwitcher();
+  renderResultsSiteSelector();
+  renderMinerList();
+  renderCapexList();
+  recalcAndRender();
+  markDirty();
+}
+
+function applyQuickScenario(key) {
+  const q = QUICK_SCENARIOS[key];
+  if (!q) return;
+  state.network.priceGrowthMoPct = q.overrides.priceGrowthMo;
+  state.network.diffGrowthYrPct = q.overrides.diffGrowthYr;
+  syncInputsFromState();
+  recalcAndRender();
+  markDirty();
+  showToast('Loaded: ' + q.name, 'success');
+}
+
+function renderScenarios() {
+  const content = $('#scenarios-content');
+  const cur = project(state);
+  const rows = [];
+  rows.push({
+    name: '(current)',
+    isCurrent: true,
+    breakeven: cur.breakevenMonth,
+    roi: cur.roi,
+    horizonProfit: cur.horizonProfit,
+    cumulative: cur.rows.map(r => r.cumulative),
+    horizon: cur.horizon
+  });
+  for (const sc of state.scenarios) {
+    const p = project(sc.snapshot);
+    rows.push({
+      id: sc.id,
+      name: sc.name,
+      breakeven: p.breakevenMonth,
+      roi: p.roi,
+      horizonProfit: p.horizonProfit,
+      cumulative: p.rows.map(r => r.cumulative),
+      horizon: p.horizon
+    });
+  }
+
+  if (state.scenarios.length === 0) {
+    content.innerHTML = `
+      <table class="scenario-table">
+        <thead><tr>
+          <th>Scenario</th><th>Break-even</th><th>ROI</th><th>Lifetime profit</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr class="scen-current">
+            <td class="scen-name">(current)</td>
+            <td>${rows[0].breakeven != null ? rows[0].breakeven + ' mo' : 'Never'}</td>
+            <td>${fmtPct(rows[0].roi)}</td>
+            <td>${fmtUSD(rows[0].horizonProfit)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="scenarios-empty">Save the current setup as a scenario to compare side-by-side.</div>
+    `;
+  } else {
+    let html = `
+      <table class="scenario-table">
+        <thead><tr>
+          <th>Scenario</th><th>Break-even</th><th>ROI</th><th>Lifetime profit</th><th></th>
+        </tr></thead>
+        <tbody>`;
+    for (const r of rows) {
+      const cls = r.isCurrent ? 'scen-current' : '';
+      const beTxt = r.breakeven != null ? r.breakeven + ' mo' : 'Never';
+      const actions = r.isCurrent ? '' :
+        `<button class="scen-load" data-load="${r.id}">Load</button> <button class="scen-delete" data-del="${r.id}" title="Delete">✕</button>`;
+      html += `
+        <tr class="${cls}">
+          <td class="scen-name">${escapeHtml(r.name)}</td>
+          <td>${beTxt}</td>
+          <td>${fmtPct(r.roi)}</td>
+          <td>${fmtUSD(r.horizonProfit)}</td>
+          <td>${actions}</td>
+        </tr>`;
+    }
+    html += '</tbody></table>';
+    content.innerHTML = html;
+
+    content.querySelectorAll('[data-del]').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.del;
+        state.scenarios = state.scenarios.filter(s => s.id !== id);
+        markDirty();
+        renderScenarios();
+        showToast('Scenario removed');
+      });
+    });
+    content.querySelectorAll('[data-load]').forEach(b => {
+      b.addEventListener('click', () => {
+        const sc = state.scenarios.find(s => s.id === b.dataset.load);
+        if (sc) {
+          applyScenarioSnapshot(sc.snapshot);
+          showToast('Loaded: ' + sc.name, 'success');
+        }
+      });
+    });
+  }
+
+  renderScenarioChart(rows);
+}
+
+function renderScenarioChart(rows) {
+  if (!window.Chart) return;
+  destroyChart('scenarios');
+  const c = chartColors();
+  const colors = [c.accent, c.green, c.gold, c.blue, c.red];
+  const maxHorizon = Math.max(...rows.map(r => r.horizon));
+  const labels = Array.from({ length: maxHorizon }, (_, i) => 'M' + (i + 1));
+  const datasets = rows.map((r, i) => ({
+    label: r.name,
+    data: r.cumulative,
+    borderColor: i === 0 ? c.accent : colors[i % colors.length],
+    backgroundColor: i === 0 ? 'rgba(247,147,26,0.08)' : 'transparent',
+    borderWidth: i === 0 ? 2.5 : 1.5,
+    fill: i === 0,
+    tension: 0.2,
+    pointRadius: 0,
+    borderDash: i === 0 ? [] : [4, 4]
+  }));
+  chartRefs.scenarios = new Chart($('#chart-scenarios'), {
+    type:'line',
+    data:{ labels, datasets },
+    options: commonChartOpts()
+  });
+}
+
+function showSaveScenarioPrompt() {
+  const wrap = $('#name-prompt');
+  const def = 'Scenario ' + (state.scenarios.length + 1);
+  wrap.innerHTML = `
+    <div class="name-prompt-row">
+      <input type="text" id="scenario-name-input" placeholder="Scenario name" value="${escapeAttr(def)}">
+      <button class="save" id="scenario-name-save">Save</button>
+      <button class="cancel" id="scenario-name-cancel">Cancel</button>
+    </div>
+  `;
+  const inp = $('#scenario-name-input');
+  inp.focus(); inp.select();
+  $('#scenario-name-save').addEventListener('click', () => {
+    const name = (inp.value || '').trim() || def;
+    state.scenarios.push({ id: 'sc-' + Math.random().toString(36).slice(2,9), name, snapshot: snapshotState() });
+    markDirty();
+    wrap.innerHTML = '';
+    renderScenarios();
+    showToast('Scenario saved', 'success');
+  });
+  $('#scenario-name-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('#scenario-name-save').click();
+    if (e.key === 'Escape') $('#scenario-name-cancel').click();
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CSV export
+// ────────────────────────────────────────────────────────────────────────────
+
+function exportCsv() {
+  const p = project(state);
+  const lines = [
+    ['month','btc_mined','btc_price_usd','difficulty','block_reward','revenue_usd','power_cost_usd','pool_paid_usd','maintenance_usd','net_profit_usd','cumulative_usd'].join(',')
+  ];
+  for (const r of p.rows) {
+    lines.push([
+      r.month,
+      r.btcMined.toFixed(8),
+      r.btcPrice.toFixed(2),
+      r.difficulty.toFixed(0),
+      r.reward.toFixed(4),
+      r.revenue.toFixed(2),
+      r.powerCost.toFixed(2),
+      r.poolPaid.toFixed(2),
+      r.maintCost.toFixed(2),
+      r.netProfit.toFixed(2),
+      r.cumulative.toFixed(2)
+    ].join(','));
+  }
+  const blob = new Blob([lines.join('\n')], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hashpath-projection-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  showToast('CSV exported', 'success');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Input wiring
+// ────────────────────────────────────────────────────────────────────────────
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+function syncInputsFromState() {
+  const site = activeSite();
+  $('#elec-rate').value = site.power.elecRate;
+  $('#colo-rate').value = site.power.coloRate;
+  $('#pool-fee').value = state.ops.poolFeePct;
+  $('#uptime').value = site.ops.uptimePct;
+  $('#maintenance').value = site.ops.maintenancePct;
+  $('#btc-price').value = Math.round(state.network.btcPrice);
+  $('#difficulty').value = +state.network.difficultyT.toFixed(2);
+  $('#block-reward').value = state.network.blockReward;
+  $('#next-adj').value = +(+state.network.nextAdjPct).toFixed(2);
+  $('#diff-growth').value = state.network.diffGrowthYrPct;
+  $('#price-growth').value = state.network.priceGrowthMoPct;
+  $('#horizon').value = state.network.horizonMonths;
+  const nameInp = $('#site-name-input');
+  if (nameInp) nameInp.value = site.name || '';
+  syncPowerModeUI();
+}
+
+function syncPowerModeUI() {
+  const site = activeSite();
+  const mode = site.power.mode;
+  $$('#power-mode-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  $('#field-elec-rate-wrap').style.display = mode === 'kwh' ? '' : 'none';
+  $('#field-colo-rate-wrap').style.display = mode === 'colo' ? '' : 'none';
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CapEx items (collapsible list)
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderCapexList() {
+  const list = $('#capex-list');
+  const arrow = $('#capex-arrow');
+  const body = $('#capex-body');
+  const subtotal = $('#capex-subtotal');
+
+  const itemsOnSite = (state.capexItems || []).filter(it => it.siteId === state.ui.activeSiteId);
+  const total = itemsOnSite.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
+  subtotal.textContent = fmtUSD(total);
+
+  arrow.classList.toggle('open', !!state.ui.capexExpanded);
+  body.classList.toggle('open', !!state.ui.capexExpanded);
+
+  if (itemsOnSite.length === 0) {
+    list.innerHTML = '<div class="capex-empty">No CapEx items yet</div>';
+  } else {
+    list.innerHTML = '';
+    for (const it of itemsOnSite) {
+      const row = document.createElement('div');
+      row.className = 'capex-row';
+      row.innerHTML = `
+        <input type="text" class="field-input" data-cx-field="name" data-cx-id="${it.id}" placeholder="Name (e.g. Rack)" value="${escapeAttr(it.name || '')}">
+        <div class="field-suffix" data-suffix="USD"><input type="number" class="field-input capex-amount" min="0" step="50" data-cx-field="amount" data-cx-id="${it.id}" value="${it.amount || 0}"></div>
+        <button class="capex-delete" data-cx-del="${it.id}" title="Remove">✕</button>
+      `;
+      list.appendChild(row);
+    }
+    list.querySelectorAll('input[data-cx-field]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const id = inp.dataset.cxId;
+        const f = inp.dataset.cxField;
+        const it = state.capexItems.find(x => x.id === id);
+        if (!it) return;
+        if (f === 'name') it.name = inp.value;
+        else it.amount = parseFloat(inp.value) || 0;
+        markDirty();
+        // Light update — only subtotal + section header (active site only)
+        const newTotal = state.capexItems
+          .filter(x => x.siteId === state.ui.activeSiteId)
+          .reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+        subtotal.textContent = fmtUSD(newTotal);
+        recalcAndRender();
+      });
+    });
+    list.querySelectorAll('[data-cx-del]').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.cxDel;
+        state.capexItems = state.capexItems.filter(x => x.id !== id);
+        markDirty();
+        renderCapexList();
+        recalcAndRender();
+      });
+    });
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Modals (Settings + About)
+// ────────────────────────────────────────────────────────────────────────────
+
+function openSettings() {
+  $('#settings-modal').classList.remove('hidden');
+  syncSettingsUI();
+}
+function closeSettings() { $('#settings-modal').classList.add('hidden'); }
+function openAbout() { $('#about-modal').classList.remove('hidden'); }
+function closeAbout() {
+  $('#about-modal').classList.add('hidden');
+  const ln = document.getElementById('ln-panel');
+  if (ln) ln.style.display = 'none';
+}
+
+const LN_ADDR = 'peerloomllc@strike.me';
+function isMobile() { return navigator.maxTouchPoints > 0 && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent); }
+
+function handleDonateBtc() {
+  if (isMobile()) { window.location.href = 'lightning:' + LN_ADDR; return; }
+  const panel = document.getElementById('ln-panel');
+  if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+  const canvas = document.createElement('canvas');
+  const qr = qrcode(0, 'L');
+  qr.addData('lightning:' + LN_ADDR);
+  qr.make();
+  const mods = qr.getModuleCount();
+  const scale = Math.max(2, Math.floor(180 / (mods + 8)));
+  const px = scale * (mods + 8);
+  canvas.width = canvas.height = px;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, px, px);
+  ctx.fillStyle = '#000000';
+  for (let r = 0; r < mods; r++) for (let c = 0; c < mods; c++) {
+    if (qr.isDark(r, c)) ctx.fillRect((c + 4) * scale, (r + 4) * scale, scale, scale);
+  }
+  canvas.className = 'ln-qr';
+  panel.innerHTML = '';
+  panel.appendChild(canvas);
+  const addr = document.createElement('div');
+  addr.className = 'ln-addr';
+  addr.textContent = LN_ADDR;
+  addr.title = 'Click to copy';
+  addr.onclick = () => { navigator.clipboard.writeText(LN_ADDR).then(() => showToast('Lightning address copied','success')); };
+  panel.appendChild(addr);
+  const hint = document.createElement('div');
+  hint.className = 'ln-hint';
+  hint.textContent = 'Scan with a Lightning wallet or click to copy';
+  panel.appendChild(hint);
+  panel.style.display = '';
+}
+
+function syncSettingsUI() {
+  $('#theme-dark-btn').classList.toggle('active', state.ui.theme === 'dark');
+  $('#theme-light-btn').classList.toggle('active', state.ui.theme === 'light');
+}
+
+function setThemeSetting(theme) {
+  if (theme !== 'dark' && theme !== 'light') return;
+  state.ui.theme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  syncSettingsUI();
+  markDirty();
+  if (state.ui.activeTab === 'charts') renderCharts(project(state));
+  if (state.ui.activeTab === 'scenarios') renderScenarios();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// JSON export / import / clear
+// ────────────────────────────────────────────────────────────────────────────
+
+function exportJSON() {
+  const snap = {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    miners: state.miners,
+    capexItems: state.capexItems,
+    sites: state.sites,
+    customPresets: state.customPresets,
+    ops: state.ops,
+    network: state.network,
+    ui: {
+      theme: state.ui.theme,
+      activeSiteId: state.ui.activeSiteId,
+      resultsSiteId: state.ui.resultsSiteId,
+      expandedMiners: state.ui.expandedMiners,
+      capexExpanded: state.ui.capexExpanded
+    },
+    scenarios: state.scenarios
+  };
+  const blob = new Blob([JSON.stringify(snap, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hashpath-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  showToast('JSON exported', 'success');
+}
+
+function handleJsonImport(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const snap = JSON.parse(reader.result);
+      if (!confirm('Import will replace ALL current data (miners, CapEx, scenarios, settings). Continue?')) return;
+      applySnapshotData(snap);
+      document.documentElement.setAttribute('data-theme', state.ui.theme);
+      syncInputsFromState();
+      renderSiteSwitcher();
+      renderResultsSiteSelector();
+      refreshPresetDropdown();
+      renderMinerList();
+      renderCapexList();
+      recalcAndRender();
+      persist();
+      clearDirty();
+      closeSettings();
+      showToast('JSON imported', 'success');
+    } catch (e) {
+      showToast('Import failed: ' + e.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData() {
+  if (!confirm('Permanently remove all miners, CapEx items, scenarios, and settings? This cannot be undone.')) return;
+  state.miners = [];
+  state.capexItems = [];
+  state.scenarios = [];
+  state.customPresets = [];
+  state.ui.expandedMiners = {};
+  state.ui.minersExpanded = false;
+  state.ui.capexExpanded = false;
+  // Reset to a fresh single default site
+  state.sites = [defaultSite()];
+  state.ui.activeSiteId = state.sites[0].id;
+  state.ui.resultsSiteId = 'all';
+  state.ops = { poolFeePct:1.5 };
+  state.network = {
+    btcPrice: state.live.btcPrice || 95000,
+    difficultyT: state.live.difficulty || 109.78,
+    blockReward: 3.125,
+    nextAdjPct: state.live.nextAdjPct || 0,
+    diffGrowthYrPct: 30, priceGrowthMoPct: 0, horizonMonths: 36
+  };
+  syncInputsFromState();
+  renderSiteSwitcher();
+  renderResultsSiteSelector();
+  refreshPresetDropdown();
+  renderMinerList();
+  renderCapexList();
+  recalcAndRender();
+  persist();
+  clearDirty();
+  closeSettings();
+  showToast('All data cleared', 'success');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Save button
+// ────────────────────────────────────────────────────────────────────────────
+
+function saveNow() {
+  const ok = persist();
+  if (ok) {
+    clearDirty();
+    showToast('Saved', 'success');
+  } else {
+    showToast('Save failed (storage unavailable)', 'error');
+  }
+}
+
+function bindInputs() {
+  // Site switcher
+  $('#add-site-btn').addEventListener('click', () => {
+    const newSite = defaultSite('Site ' + (state.sites.length + 1));
+    state.sites.push(newSite);
+    state.ui.activeSiteId = newSite.id;
+    markDirty();
+    renderSiteSwitcher();
+    renderResultsSiteSelector();
+    syncInputsFromState();
+    renderMinerList();
+    renderCapexList();
+    recalcAndRender();
+    setTimeout(() => { const inp = $('#site-name-input'); if (inp) { inp.focus(); inp.select(); } }, 0);
+  });
+  $('#site-name-input').addEventListener('input', (e) => {
+    const site = activeSite();
+    if (!site) return;
+    site.name = e.target.value;
+    markDirty();
+    renderSiteSwitcher();
+    renderResultsSiteSelector();
+  });
+  $('#site-remove-btn').addEventListener('click', () => {
+    if (state.sites.length <= 1) return;
+    const site = activeSite();
+    if (!site) return;
+    const minersOnSite = state.miners.filter(m => m.siteId === site.id);
+    const capexOnSite = state.capexItems.filter(it => it.siteId === site.id);
+    let msg = 'Remove site "' + (site.name || 'Site') + '"?';
+    if (minersOnSite.length || capexOnSite.length) {
+      msg += '\n\nThis will also delete ' + minersOnSite.length + ' miner(s) and ' + capexOnSite.length + ' CapEx item(s) on this site.';
+    }
+    if (!confirm(msg)) return;
+    state.miners = state.miners.filter(m => m.siteId !== site.id);
+    state.capexItems = state.capexItems.filter(it => it.siteId !== site.id);
+    state.sites = state.sites.filter(s => s.id !== site.id);
+    state.ui.activeSiteId = state.sites[0].id;
+    if (state.ui.resultsSiteId === site.id) state.ui.resultsSiteId = 'all';
+    markDirty();
+    renderSiteSwitcher();
+    renderResultsSiteSelector();
+    syncInputsFromState();
+    renderMinerList();
+    renderCapexList();
+    recalcAndRender();
+    showToast('Site removed', 'success');
+  });
+
+  // Power mode (per active site)
+  $$('#power-mode-toggle button').forEach(b => {
+    b.addEventListener('click', () => {
+      activeSite().power.mode = b.dataset.mode;
+      syncPowerModeUI();
+      markDirty(); recalcAndRender();
+    });
+  });
+  $('#elec-rate').addEventListener('input', (e) => {
+    activeSite().power.elecRate = parseFloat(e.target.value) || 0;
+    markDirty(); recalcAndRender();
+  });
+  $('#colo-rate').addEventListener('input', (e) => {
+    activeSite().power.coloRate = parseFloat(e.target.value) || 0;
+    markDirty(); recalcAndRender();
+  });
+
+  // Ops (pool fee global; uptime + maintenance per active site)
+  $('#pool-fee').addEventListener('input', (e) => { state.ops.poolFeePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+  $('#uptime').addEventListener('input', (e) => { activeSite().ops.uptimePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+  $('#maintenance').addEventListener('input', (e) => { activeSite().ops.maintenancePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+
+  // Network — track user override
+  $('#btc-price').addEventListener('input', (e) => {
+    state.network.btcPrice = parseFloat(e.target.value) || 0;
+    state.network._priceFromLive = false;
+    markDirty(); recalcAndRender();
+  });
+  $('#difficulty').addEventListener('input', (e) => {
+    state.network.difficultyT = parseFloat(e.target.value) || 0;
+    state.network._diffFromLive = false;
+    markDirty(); recalcAndRender();
+  });
+  $('#block-reward').addEventListener('input', (e) => {
+    state.network.blockReward = parseFloat(e.target.value) || 0;
+    markDirty(); recalcAndRender();
+  });
+  $('#next-adj').addEventListener('input', (e) => {
+    state.network.nextAdjPct = parseFloat(e.target.value) || 0;
+    state.network._adjFromLive = false;
+    markDirty(); recalcAndRender();
+  });
+  $('#diff-growth').addEventListener('input', (e) => { state.network.diffGrowthYrPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+  $('#price-growth').addEventListener('input', (e) => { state.network.priceGrowthMoPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+  $('#horizon').addEventListener('input', (e) => {
+    state.network.horizonMonths = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
+    markDirty(); recalcAndRender();
+  });
+
+  // Add Miner trigger (reveals preset dropdown + Custom button)
+  $('#add-miner-trigger').addEventListener('click', () => {
+    $('#add-miner-row').classList.add('expanded');
+  });
+  $('#cancel-add-miner').addEventListener('click', () => {
+    $('#add-miner-row').classList.remove('expanded');
+    $('#preset-select').value = '';
+  });
+
+  // Preset select
+  const sel = $('#preset-select');
+  refreshPresetDropdown();
+  sel.addEventListener('change', (e) => {
+    const id = e.target.value;
+    if (!id) return;
+    const preset = MINER_PRESETS.find(p => p.id === id) || state.customPresets.find(p => p.id === id);
+    if (!preset) return;
+    state.miners.push({
+      id: uid(), name: preset.name, siteId: state.ui.activeSiteId,
+      units: 1, cost: preset.cost,
+      hashrate: preset.hashrate, watts: preset.watts
+    });
+    state.ui.expandedMiners = {};
+    markDirty();
+    renderMinerList();
+    recalcAndRender();
+    sel.value = '';
+    $('#add-miner-row').classList.remove('expanded');
+  });
+
+  // Add custom
+  $('#add-custom-btn').addEventListener('click', () => {
+    const id = uid();
+    state.miners.push({ id, name:'Custom miner', siteId: state.ui.activeSiteId, units:1, cost:0, hashrate:0, watts:0 });
+    state.ui.expandedMiners[id] = true;
+    markDirty();
+    renderMinerList();
+    recalcAndRender();
+    $('#add-miner-row').classList.remove('expanded');
+  });
+
+  // Tab nav
+  $$('.tab-btn').forEach(b => {
+    b.addEventListener('click', () => switchTab(b.dataset.tab));
+  });
+
+  // Miners subsection (collapsible)
+  $('#miners-header').addEventListener('click', () => {
+    state.ui.minersExpanded = !state.ui.minersExpanded;
+    $('#miners-arrow').classList.toggle('open', state.ui.minersExpanded);
+    $('#miners-body').classList.toggle('open', state.ui.minersExpanded);
+    markDirty();
+  });
+
+  // CapEx subsection
+  $('#capex-header').addEventListener('click', () => {
+    state.ui.capexExpanded = !state.ui.capexExpanded;
+    $('#capex-arrow').classList.toggle('open', state.ui.capexExpanded);
+    $('#capex-body').classList.toggle('open', state.ui.capexExpanded);
+    markDirty();
+  });
+  $('#capex-add-btn').addEventListener('click', () => {
+    state.capexItems.push({ id: 'cx-' + Math.random().toString(36).slice(2,9), name:'', amount: 0, siteId: state.ui.activeSiteId });
+    state.ui.capexExpanded = true;
+    markDirty();
+    renderCapexList();
+    // Focus the new name field
+    setTimeout(() => {
+      const inputs = $('#capex-list').querySelectorAll('input[data-cx-field="name"]');
+      const last = inputs[inputs.length - 1];
+      if (last) last.focus();
+    }, 0);
+    recalcAndRender();
+  });
+
+  // Save bar
+  $('#save-btn').addEventListener('click', saveNow);
+  $('#open-about-btn').addEventListener('click', openAbout);
+  $('#open-settings-btn').addEventListener('click', openSettings);
+
+  // Settings modal
+  $('#settings-close').addEventListener('click', closeSettings);
+  $('#settings-modal').addEventListener('click', (e) => { if (e.target.id === 'settings-modal') closeSettings(); });
+  $('#theme-dark-btn').addEventListener('click', () => setThemeSetting('dark'));
+  $('#theme-light-btn').addEventListener('click', () => setThemeSetting('light'));
+  $('#settings-csv-btn').addEventListener('click', exportCsv);
+  $('#settings-export-json').addEventListener('click', exportJSON);
+  $('#settings-import-json').addEventListener('click', () => $('#json-import-file').click());
+  $('#json-import-file').addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    handleJsonImport(f);
+    e.target.value = '';
+  });
+  $('#settings-clear').addEventListener('click', clearAllData);
+
+  // About modal
+  $('#about-close').addEventListener('click', closeAbout);
+  $('#about-modal').addEventListener('click', (e) => { if (e.target.id === 'about-modal') closeAbout(); });
+  $('#donate-btc-link').addEventListener('click', (e) => { e.preventDefault(); handleDonateBtc(); });
+
+  // Escape closes any open modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!$('#settings-modal').classList.contains('hidden')) closeSettings();
+    else if (!$('#about-modal').classList.contains('hidden')) closeAbout();
+  });
+
+  // Ctrl/Cmd+S to save
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      saveNow();
+    }
+  });
+
+  // Scenario controls
+  $('#save-scenario-btn').addEventListener('click', showSaveScenarioPrompt);
+  $$('.quick-btn[data-quick]').forEach(b => {
+    b.addEventListener('click', () => applyQuickScenario(b.dataset.quick));
+  });
+}
+
+function switchTab(name) {
+  state.ui.activeTab = name;
+  $$('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  const resultsSiteId = state.ui.resultsSiteId === 'all' ? null : state.ui.resultsSiteId;
+  if (name === 'charts') renderCharts(project(state, resultsSiteId));
+  if (name === 'scenarios') renderScenarios();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Site switcher rendering
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderSiteSwitcher() {
+  const chipBox = $('#site-chips');
+  if (!chipBox) return;
+  chipBox.innerHTML = '';
+  for (const site of state.sites) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'site-chip' + (site.id === state.ui.activeSiteId ? ' active' : '');
+    chip.textContent = site.name || 'Site';
+    const id = site.id;
+    chip.addEventListener('click', () => {
+      if (state.ui.activeSiteId === id) return;
+      state.ui.activeSiteId = id;
+      renderSiteSwitcher();
+      syncInputsFromState();
+      renderMinerList();
+      renderCapexList();
+      recalcAndRender();
+    });
+    chipBox.appendChild(chip);
+  }
+  const nameInp = $('#site-name-input');
+  const site = activeSite();
+  if (nameInp && site) nameInp.value = site.name || '';
+  const rmBtn = $('#site-remove-btn');
+  if (rmBtn) rmBtn.disabled = state.sites.length <= 1;
+}
+
+function renderResultsSiteSelector() {
+  const box = $('#results-site-chips');
+  if (!box) return;
+  document.body.classList.toggle('multisite', state.sites.length > 1);
+  if (state.sites.length <= 1) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const items = [{ id: 'all', name: 'All' }, ...state.sites.map(s => ({ id: s.id, name: s.name || 'Site' }))];
+  for (const it of items) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'results-site-chip' + (state.ui.resultsSiteId === it.id ? ' active' : '');
+    chip.textContent = it.name;
+    const id = it.id;
+    chip.addEventListener('click', () => {
+      if (state.ui.resultsSiteId === id) return;
+      state.ui.resultsSiteId = id;
+      renderResultsSiteSelector();
+      recalcAndRender();
+    });
+    box.appendChild(chip);
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Master recalc
+// ────────────────────────────────────────────────────────────────────────────
+
+function recalcAndRender() {
+  const inputProj = project(state, state.ui.activeSiteId);
+  const resultsSiteId = state.ui.resultsSiteId === 'all' ? null : state.ui.resultsSiteId;
+  const resultsProj = project(state, resultsSiteId);
+  renderHardwareSummary(inputProj);
+  renderResults(resultsProj);
+  if (state.ui.activeTab === 'charts') renderCharts(resultsProj);
+  if (state.ui.activeTab === 'scenarios') renderScenarios();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// QR Code Generator (kazuhikoarase/qrcode-generator v1.4.4, MIT)
+// Embedded inline to keep single-file zero-dependency philosophy.
+// ────────────────────────────────────────────────────────────────────────────
+
+var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(l=4*u+17),e(0,0),e(l-7,0),e(0,l-7),i(),o(),v(t,r),7<=u&&h(t),null==n&&(n=w(u,f,c)),d(n,r)}var u=t,f=y[r],g=null,l=0,n=null,c=[],s={},e=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||l<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||l<=r+n||(g[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},o=function(){for(var t=8;t<l-8;t+=1)null==g[t][6]&&(g[t][6]=t%2==0);for(var r=8;r<l-8;r+=1)null==g[6][r]&&(g[6][r]=r%2==0)},i=function(){for(var t=B.getPatternPosition(u),r=0;r<t.length;r+=1)for(var e=0;e<t.length;e+=1){var n=t[r],o=t[e];if(null==g[n][o])for(var i=-2;i<=2;i+=1)for(var a=-2;a<=2;a+=1)g[n+i][o+a]=-2==i||2==i||-2==a||2==a||0==i&&0==a}},h=function(t){for(var r=B.getBCHTypeNumber(u),e=0;e<18;e+=1){var n=!t&&1==(r>>e&1);g[Math.floor(e/3)][e%3+l-8-3]=n}for(e=0;e<18;e+=1){n=!t&&1==(r>>e&1);g[e%3+l-8-3][Math.floor(e/3)]=n}},v=function(t,r){for(var e=f<<3|r,n=B.getBCHTypeInfo(e),o=0;o<15;o+=1){var i=!t&&1==(n>>o&1);o<6?g[o][8]=i:o<8?g[o+1][8]=i:g[l-15+o][8]=i}for(o=0;o<15;o+=1){i=!t&&1==(n>>o&1);o<8?g[8][l-o-1]=i:o<9?g[8][15-o-1+1]=i:g[8][15-o-1]=i}g[l-8][8]=!t},d=function(t,r){for(var e=-1,n=l-1,o=7,i=0,a=B.getMaskFunction(r),u=l-1;0<u;u-=2)for(6==u&&(u-=1);;){for(var f=0;f<2;f+=1)if(null==g[n][u-f]){var c=!1;i<t.length&&(c=1==(t[i]>>>o&1)),a(n,u-f)&&(c=!c),g[n][u-f]=c,-1==(o-=1)&&(i+=1,o=7)}if((n+=e)<0||l<=n){n-=e,e=-e;break}}},w=function(t,r,e){for(var n=b.getRSBlocks(t,r),o=M(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=C(i[u],l.getLength()-1).mod(l);a[u]=new Array(l.getLength()-1);for(g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=0<=s?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};s.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=x(t);break;case"Alphanumeric":e=m(t);break;case"Byte":e=L(t);break;case"Kanji":e=D(t);break;default:throw"mode:"+r}c.push(e),n=null},s.isDark=function(t,r){if(t<0||l<=t||r<0||l<=r)throw t+","+r;return g[t][r]},s.getModuleCount=function(){return l},s.make=function(){if(u<1){for(var t=1;t<40;t++){for(var r=b.getRSBlocks(t,f),e=M(),n=0;n<c.length;n++){var o=c[n];e.put(o.getMode(),4),e.put(o.getLength(),B.getLengthInBits(o.getMode(),t)),o.write(e)}var i=0;for(n=0;n<r.length;n++)i+=r[n].dataCount;if(e.getLengthInBits()<=8*i)break}u=t}a(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){a(!0,e);var n=B.getLostPoint(s);(0==e||n<t)&&(t=n,r=e)}return r}())},s.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<s.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<s.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=s.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},s.createSvgTag=function(t,r,e,n){var o={};"object"==typeof t&&(t=(o=t).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,f,c=s.getModuleCount()*t+2*r,g="";for(f="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",g+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',g+=o.scalable?"":' width="'+c+'px" height="'+c+'px"',g+=' viewBox="0 0 '+c+" "+c+'" ',g+=' preserveAspectRatio="xMinYMin meet"',g+=n.text||e.text?' role="img" aria-labelledby="'+p([n.id,e.id].join(" ").trim())+'"':"",g+=">",g+=n.text?'<title id="'+p(n.id)+'">'+p(n.text)+"</title>":"",g+=e.text?'<description id="'+p(e.id)+'">'+p(e.text)+"</description>":"",g+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',g+='<path d="',a=0;a<s.getModuleCount();a+=1)for(u=a*t+r,i=0;i<s.getModuleCount();i+=1)s.isDark(a,i)&&(g+="M"+(i*t+r)+","+u+f);return g+='" stroke="transparent" fill="black"/>',g+="</svg>"},s.createDataURL=function(o,t){o=o||2,t=void 0===t?4*o:t;var r=s.getModuleCount()*o+2*t,i=t,a=r-t;return I(r,r,function(t,r){if(i<=t&&t<a&&i<=r&&r<a){var e=Math.floor((t-i)/o),n=Math.floor((r-i)/o);return s.isDark(n,e)?0:1}return 1})},s.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=s.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=s.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=p(e),o+='"'),o+="/>"};var p=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return s.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*s.getModuleCount()+2*t,u=t,f=a-t,c={"██":"█","█ ":"▀"," █":"▄","  ":" "},g={"██":"▀","█ ":"▀"," █":" ","  ":" "},l="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<f&&u<=r&&r<f&&s.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<f&&u<=r+1&&r+1<f&&s.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",l+=t<1&&f<=r+1?g[i]:c[i];l+="\n"}return a%2&&0<t?l.substring(0,l.length-a-1)+Array(1+a).join("▀"):l.substring(0,l.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=s.getModuleCount()*t+2*r,u=r,f=a-r,c=Array(t+1).join("██"),g=Array(t+1).join("  "),l="",h="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),h="",n=0;n<a;n+=1)i=1,u<=n&&n<f&&u<=e&&e<f&&s.isDark(o,Math.floor((n-u)/t))&&(i=0),h+=i?c:g;for(o=0;o<t;o+=1)l+=h+"\n"}return l.substring(0,l.length-1)},s.renderTo2dContext=function(t,r){r=r||2;for(var e=s.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=s.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},s}i.stringToBytes=(i.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,i.createStringToBytes=function(u,f){var i=function(){function t(){var t=r.read();if(-1==t)throw"eof";return t}for(var r=S(u),e=0,n={};;){var o=r.read();if(-1==o)break;var i=t(),a=t()<<8|t();n[String.fromCharCode(o<<8|i)]=a,e+=1}if(e!=f)throw e+" != "+f;return n}(),a="?".charCodeAt(0);return function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);if(n<128)r.push(n);else{var o=i[t.charAt(e)];"number"==typeof o?(255&o)==o?r.push(o):(r.push(o>>>8),r.push(255&o)):r.push(a)}}return r}};var r,t,a=1,u=2,o=4,f=8,y={L:1,M:0,Q:3,H:2},e=0,n=1,c=2,g=3,l=4,h=5,s=6,v=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],(t={}).getBCHTypeInfo=function(t){for(var r=t<<10;0<=d(r)-d(1335);)r^=1335<<d(r)-d(1335);return 21522^(t<<10|r)},t.getBCHTypeNumber=function(t){for(var r=t<<12;0<=d(r)-d(7973);)r^=7973<<d(r)-d(7973);return t<<12|r},t.getPatternPosition=function(t){return r[t-1]},t.getMaskFunction=function(t){switch(t){case e:return function(t,r){return(t+r)%2==0};case n:return function(t,r){return t%2==0};case c:return function(t,r){return r%3==0};case g:return function(t,r){return(t+r)%3==0};case l:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case h:return function(t,r){return t*r%2+t*r%3==0};case s:return function(t,r){return(t*r%2+t*r%3)%2==0};case v:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},t.getErrorCorrectPolynomial=function(t){for(var r=C([1],0),e=0;e<t;e+=1)r=r.multiply(C([1,w.gexp(e)],0));return r},t.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case o:case f:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case o:return 16;case f:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case o:return 16;case f:return 12;default:throw"mode:"+t}}},t.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);5<i&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},t);function d(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r}var w=function(){for(var r=new Array(256),e=new Array(256),t=0;t<8;t+=1)r[t]=1<<t;for(t=8;t<256;t+=1)r[t]=r[t-4]^r[t-5]^r[t-6]^r[t-8];for(t=0;t<255;t+=1)e[r[t]]=t;var n={glog:function(t){if(t<1)throw"glog("+t+")";return e[t]},gexp:function(t){for(;t<0;)t+=255;for(;256<=t;)t-=255;return r[t]}};return n}();function C(n,o){if(void 0===n.length)throw n.length+"/"+o;var r=function(){for(var t=0;t<n.length&&0==n[t];)t+=1;for(var r=new Array(n.length-t+o),e=0;e<n.length-t;e+=1)r[e]=n[e+t];return r}(),i={getAt:function(t){return r[t]},getLength:function(){return r.length},multiply:function(t){for(var r=new Array(i.getLength()+t.getLength()-1),e=0;e<i.getLength();e+=1)for(var n=0;n<t.getLength();n+=1)r[e+n]^=w.gexp(w.glog(i.getAt(e))+w.glog(t.getAt(n)));return C(r,0)},mod:function(t){if(i.getLength()-t.getLength()<0)return i;for(var r=w.glog(i.getAt(0))-w.glog(t.getAt(0)),e=new Array(i.getLength()),n=0;n<i.getLength();n+=1)e[n]=i.getAt(n);for(n=0;n<t.getLength();n+=1)e[n]^=w.gexp(w.glog(t.getAt(n))+r);return C(e,0).mod(t)}};return i}function p(){var e=[],o={writeByte:function(t){e.push(255&t)},writeShort:function(t){o.writeByte(t),o.writeByte(t>>>8)},writeBytes:function(t,r,e){r=r||0,e=e||t.length;for(var n=0;n<e;n+=1)o.writeByte(t[n+r])},writeString:function(t){for(var r=0;r<t.length;r+=1)o.writeByte(t.charCodeAt(r))},toByteArray:function(){return e},toString:function(){var t="";t+="[";for(var r=0;r<e.length;r+=1)0<r&&(t+=","),t+=e[r];return t+="]"}};return o}var k,A,b=(k=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],(A={}).getRSBlocks=function(t,r){var e=function(t,r){switch(r){case y.L:return k[4*(t-1)+0];case y.M:return k[4*(t-1)+1];case y.Q:return k[4*(t-1)+2];case y.H:return k[4*(t-1)+3];default:return}}(t,r);if(void 0===e)throw"bad rs block @ typeNumber:"+t+"/errorCorrectionLevel:"+r;for(var n,o,i=e.length/3,a=[],u=0;u<i;u+=1)for(var f=e[3*u+0],c=e[3*u+1],g=e[3*u+2],l=0;l<f;l+=1)a.push((n=g,o=void 0,(o={}).totalCount=c,o.dataCount=n,o));return a},A),M=function(){var e=[],n=0,o={getBuffer:function(){return e},getAt:function(t){var r=Math.floor(t/8);return 1==(e[r]>>>7-t%8&1)},put:function(t,r){for(var e=0;e<r;e+=1)o.putBit(1==(t>>>r-e-1&1))},getLengthInBits:function(){return n},putBit:function(t){var r=Math.floor(n/8);e.length<=r&&e.push(0),t&&(e[r]|=128>>>n%8),n+=1}};return o},x=function(t){var r=a,n=t,e={getMode:function(){return r},getLength:function(t){return n.length},write:function(t){for(var r=n,e=0;e+2<r.length;)t.put(o(r.substring(e,e+3)),10),e+=3;e<r.length&&(r.length-e==1?t.put(o(r.substring(e,e+1)),4):r.length-e==2&&t.put(o(r.substring(e,e+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return e},m=function(t){var r=u,n=t,e={getMode:function(){return r},getLength:function(t){return n.length},write:function(t){for(var r=n,e=0;e+1<r.length;)t.put(45*o(r.charAt(e))+o(r.charAt(e+1)),11),e+=2;e<r.length&&t.put(o(r.charAt(e)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return e},L=function(t){var r=o,e=i.stringToBytes(t),n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=0;r<e.length;r+=1)t.put(e[r],8)}};return n},D=function(t){var r=f,e=i.stringToBytesFuncs.SJIS;if(!e)throw"sjis not supported.";!function(){var t=e("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=e(t),n={getMode:function(){return r},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return n},S=function(t){var e=t,n=0,o=0,i=0,r={read:function(){for(;i<8;){if(n>=e.length){if(0==i)return-1;throw"unexpected end of file./"+i}var t=e.charAt(n);if(n+=1,"="==t)return i=0,-1;t.match(/^\s$/)||(o=o<<6|a(t.charCodeAt(0)),i+=6)}var r=o>>>i-8&255;return i-=8,r}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return r},I=function(t,r,e){for(var n=function(t,r){var n=t,o=r,l=new Array(t*r),e={setPixel:function(t,r,e){l[r*n+t]=e},write:function(t){t.writeString("GIF87a"),t.writeShort(n),t.writeShort(o),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(n),t.writeShort(o),t.writeByte(0);var r=i(2);t.writeByte(2);for(var e=0;255<r.length-e;)t.writeByte(255),t.writeBytes(r,e,255),e+=255;t.writeByte(r.length-e),t.writeBytes(r,e,r.length-e),t.writeByte(0),t.writeString(";")}},i=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,o=h(),i=0;i<r;i+=1)o.add(String.fromCharCode(i));o.add(String.fromCharCode(r)),o.add(String.fromCharCode(e));var a=p(),u=function(t){var e=t,n=0,o=0,r={write:function(t,r){if(t>>>r!=0)throw"length over";for(;8<=n+r;)e.writeByte(255&(t<<n|o)),r-=8-n,t>>>=8-n,n=o=0;o|=t<<n,n+=r},flush:function(){0<n&&e.writeByte(o)}};return r}(a);u.write(r,n);var f=0,c=String.fromCharCode(l[f]);for(f+=1;f<l.length;){var g=String.fromCharCode(l[f]);f+=1,o.contains(c+g)?c+=g:(u.write(o.indexOf(c),n),o.size()<4095&&(o.size()==1<<n&&(n+=1),o.add(c+g)),c=g)}return u.write(o.indexOf(c),n),u.write(e,n),u.flush(),a.toByteArray()},h=function(){var r={},e=0,n={add:function(t){if(n.contains(t))throw"dup key:"+t;r[t]=e,e+=1},size:function(){return e},indexOf:function(t){return r[t]},contains:function(t){return void 0!==r[t]}};return n};return e}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=p();n.write(a);for(var u=function(){function e(t){a+=String.fromCharCode(r(63&t))}var n=0,o=0,i=0,a="",t={},r=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return t.writeByte=function(t){for(n=n<<8|255&t,o+=8,i+=1;6<=o;)e(n>>>o-6),o-=6},t.flush=function(){if(0<o&&(e(n<<6-o),o=n=0),i%3!=0)for(var t=3-i%3,r=0;r<t;r+=1)a+="="},t.toString=function(){return a},t}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return i}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||57344<=n?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
+
+// ────────────────────────────────────────────────────────────────────────────
+// Boot
+// ────────────────────────────────────────────────────────────────────────────
+
+(function boot() {
+  const had = load();
+  ensureSiteIntegrity();
+  document.documentElement.setAttribute('data-theme', state.ui.theme);
+  syncInputsFromState();
+  bindInputs();
+  renderSiteSwitcher();
+  renderResultsSiteSelector();
+  renderMinerList();
+  renderCapexList();
+  recalcAndRender();
+  syncSettingsUI();
+  clearDirty();
+  renderTicker();
+  refreshLive();
+  // Refresh price every 60s; full live every 5 min
+  setInterval(async () => {
+    const p = await fetchBtcPrice();
+    if (p != null) {
+      state.live.btcPrice = p;
+      if (state.network._priceFromLive !== false) {
+        state.network.btcPrice = p;
+        $('#btc-price').value = Math.round(p);
+        recalcAndRender();
+      }
+      renderTicker();
+    }
+  }, 60000);
+  setInterval(refreshLive, 300000);
+
+  // Helpful first-run nudge
+  if (!had) {
+    setTimeout(() => showToast('Welcome to HashPath — pick a miner preset to start', 'success'), 400);
+  }
+})();
+</script>
+
+</body>
+</html>

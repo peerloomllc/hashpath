@@ -1,0 +1,10 @@
+*.kate-swp
+*.swp
+.env
+node_modules/
+*.json
+*copy*.html
+.claude/
+TODO.md
+DONE.md
+CLAUDE.md
