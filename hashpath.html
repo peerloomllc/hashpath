@@ -647,7 +647,7 @@
             <div class="field-group">
               <label class="field-label">BTC price growth</label>
               <div class="field-suffix long" data-suffix="%/mo">
-                <input type="number" class="field-input" id="price-growth" step="0.1" value="0">
+                <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
               </div>
             </div>
           </div>
@@ -926,7 +926,7 @@ const state = {
     blockReward: 3.125,
     nextAdjPct: 0,
     diffGrowthYrPct: 30,
-    priceGrowthMoPct: 0,
+    priceGrowthMoPct: 2.53,   // ~+35%/yr — Status Quo CAGR baseline (see QUICK_SCENARIOS)
     horizonMonths: 36
   },
   ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false },
@@ -1067,7 +1067,7 @@ function applySnapshotData(snap) {
 
   state.network = {
     btcPrice: 95000, difficultyT: 109.78, blockReward: 3.125, nextAdjPct: 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 0, horizonMonths: 36,
+    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, horizonMonths: 36,
     ...(snap.network || {})
   };
   if (snap.ui) {
@@ -2504,7 +2504,7 @@ function clearAllData() {
     difficultyT: state.live.difficulty || 109.78,
     blockReward: 3.125,
     nextAdjPct: state.live.nextAdjPct || 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 0, horizonMonths: 36
+    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, horizonMonths: 36
   };
   syncInputsFromState();
   renderSiteSwitcher();
