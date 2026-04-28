@@ -744,6 +744,13 @@
       </div>
       <div class="chart-body"><canvas id="chart-sens-power"></canvas></div>
     </div>
+    <div class="chart-card wide">
+      <div class="chart-card-header">
+        <div class="chart-card-title">Difficulty: history vs. assumption</div>
+        <div class="chart-card-sub" id="chart-diff-hist-sub">—</div>
+      </div>
+      <div class="chart-body tall"><canvas id="chart-diff-hist"></canvas></div>
+    </div>
   </div>
 </main>
 
@@ -950,6 +957,7 @@ const state = {
     btcPrice: null, difficulty: null, nextAdjPct: null,
     nextAdjBlocks: null, nextAdjEta: null,
     halvingBlocksLeft: null, halvingDate: null,
+    diffHistory: null,
     fetchedAt: null
   }
 };
@@ -1207,14 +1215,31 @@ async function fetchTipHeight() {
   } catch (e) { return null; }
 }
 
+// Returns array of {t (ms), height, difficulty (raw), adj (%)} sorted oldest -> newest.
+async function fetchDifficultyHistory() {
+  try {
+    const r = await fetch('https://mempool.space/api/v1/mining/difficulty-adjustments');
+    if (!r.ok) throw new Error('dh');
+    const j = await r.json();
+    if (!Array.isArray(j)) return null;
+    return j
+      .filter(tup => Array.isArray(tup) && tup.length >= 4 && isFinite(tup[0]) && isFinite(tup[2]))
+      .map(tup => ({ t: tup[0] * 1000, height: tup[1], difficulty: tup[2], adj: tup[3] }))
+      .sort((a, b) => a.t - b.t);
+  } catch (e) { return null; }
+}
+
 async function refreshLive() {
   // Run in parallel
-  const [price, adj, hd, height] = await Promise.all([
+  const [price, adj, hd, height, diffHist] = await Promise.all([
     fetchBtcPrice(),
     fetchDifficultyAdjustment(),
     fetchHashrateAndDifficulty(),
-    fetchTipHeight()
+    fetchTipHeight(),
+    fetchDifficultyHistory()
   ]);
+
+  if (diffHist && diffHist.length) state.live.diffHistory = diffHist;
 
   state.live.fetchedAt = Date.now();
 
@@ -2030,6 +2055,124 @@ function renderCharts(p) {
       datasets:[
         { label: sensLabel, data: powerProfits, borderColor: c.green, backgroundColor:'rgba(168,208,141,0.12)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 },
         { label:'Current rate', data: powerRates.map((r, i) => Math.abs(r - baseRate) < 0.005 ? powerProfits[i] : null), borderColor:c.accent, backgroundColor:c.accent, pointRadius:5, showLine:false }
+      ]
+    },
+    options: opts
+  });
+
+  renderDiffHistoryChart(p);
+}
+
+// Difficulty history (last ~3 years sampled monthly) plus forward projection from
+// state.network.diffGrowthYrPct. Lets the user eyeball whether their growth assumption
+// is sane vs. recent reality.
+function renderDiffHistoryChart(p) {
+  destroyChart('diffHist');
+  const canvas = $('#chart-diff-hist');
+  if (!canvas) return;
+  const c = chartColors();
+
+  const HISTORY_MONTHS = 36;
+  const monthMs = 86400 * 1000 * 30.4375;
+  const now = Date.now();
+  const hist = state.live.diffHistory || [];
+
+  const currentDiffT = state.network.difficultyT
+    || (hist.length ? hist[hist.length - 1].difficulty / 1e12 : 0);
+  const yearGrowth = (state.network.diffGrowthYrPct || 0) / 100;
+  const monthGrowth = Math.pow(1 + yearGrowth, 1/12) - 1;
+
+  const labels = [];
+  const histData = [];
+  const projData = [];
+
+  // Historical: -HISTORY_MONTHS .. 0 (now). Sample by walking the sorted adjustments.
+  let cursor = 0;
+  for (let m = HISTORY_MONTHS; m >= 0; m--) {
+    const t = now - m * monthMs;
+    const d = new Date(t);
+    labels.push(d.toISOString().slice(0,7));
+    if (m === 0) {
+      histData.push(currentDiffT);
+      projData.push(currentDiffT); // bridge point so the dashed line connects
+    } else {
+      let val = null;
+      while (cursor + 1 < hist.length && hist[cursor + 1].t <= t) cursor++;
+      if (hist.length && hist[cursor].t <= t) val = hist[cursor].difficulty / 1e12;
+      histData.push(val);
+      projData.push(null);
+    }
+  }
+
+  // Projection: 1 .. horizonMonths
+  for (let m = 1; m <= p.horizon; m++) {
+    const t = now + m * monthMs;
+    const d = new Date(t);
+    labels.push(d.toISOString().slice(0,7));
+    histData.push(null);
+    projData.push(currentDiffT * Math.pow(1 + monthGrowth, m));
+  }
+
+  const growthLabel = (state.network.diffGrowthYrPct || 0).toFixed(1);
+  const subEl = $('#chart-diff-hist-sub');
+  if (subEl) {
+    if (!hist.length) {
+      subEl.textContent = `Live history unavailable · projection at ${growthLabel}%/yr over ${p.horizon} mo`;
+    } else {
+      subEl.textContent = `${HISTORY_MONTHS}-mo history · projection at ${growthLabel}%/yr over ${p.horizon} mo`;
+    }
+  }
+
+  const opts = commonChartOpts();
+  opts.scales = {
+    x: {
+      ticks: {
+        color: c.textDim,
+        font: { family:'DM Mono', size: 11 },
+        autoSkip: true,
+        maxTicksLimit: 12
+      },
+      grid: { color: c.border }
+    },
+    y: {
+      type: 'logarithmic',
+      ticks: {
+        color: c.textDim,
+        font: { family:'DM Mono', size: 11 },
+        callback: (v) => v >= 1 ? v.toFixed(0) + 'T' : v.toFixed(2) + 'T'
+      },
+      grid: { color: c.border }
+    }
+  };
+
+  chartRefs.diffHist = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Historical',
+          data: histData,
+          borderColor: c.accent,
+          backgroundColor: 'rgba(247,147,26,0.10)',
+          fill: true,
+          tension: 0.2,
+          pointRadius: 0,
+          borderWidth: 2,
+          spanGaps: false
+        },
+        {
+          label: `Assumption (${growthLabel}%/yr)`,
+          data: projData,
+          borderColor: c.gold,
+          backgroundColor: 'rgba(212,168,67,0.06)',
+          borderDash: [6, 4],
+          fill: false,
+          tension: 0.2,
+          pointRadius: 0,
+          borderWidth: 2,
+          spanGaps: false
+        }
       ]
     },
     options: opts
