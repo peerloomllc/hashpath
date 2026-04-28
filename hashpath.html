@@ -179,15 +179,14 @@
   .power-mode-toggle button.active{background:var(--accent-glow);color:var(--accent)}
 
   /* ── SITE SWITCHER ── */
-  .site-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .site-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
   .site-chip{font-family:var(--mono);font-size:13px;letter-spacing:.5px;padding:6px 12px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text-muted);cursor:pointer;transition:all .15s}
   .site-chip:hover{color:var(--text);border-color:var(--border-light)}
   .site-chip.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent-dim)}
-  .add-site-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s}
+  .site-toolbar{display:flex;gap:8px;align-items:center}
+  .site-toolbar .field-input{flex:1;min-width:0}
+  .add-site-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;height:34px}
   .add-site-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
-  .site-name-row{display:flex;flex-direction:column;gap:4px}
-  .site-name-input-row{display:flex;gap:8px}
-  .site-name-input-row .field-input{flex:1}
   .site-remove-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:13px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;height:34px}
   .site-remove-btn:hover{color:var(--red);border-color:var(--red-dim)}
   .site-remove-btn:disabled{opacity:.4;cursor:not-allowed}
@@ -195,7 +194,6 @@
 
   /* ── RESULTS STRIP (fixed, persistent across tabs) ── */
   .results-site-strip{position:fixed;top:184px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
-  .view{padding-top:336px}
   .results-site-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
   .results-site-chips{display:flex;flex-wrap:wrap;gap:5px}
   .results-site-chip{font-family:var(--mono);font-size:12px;letter-spacing:.5px;padding:3px 10px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text-muted);cursor:pointer;transition:all .15s}
@@ -524,10 +522,7 @@
     <!-- OWNERSHIP -->
     <section class="section card-ownership">
       <div class="section-header">
-        <span class="section-name-wrap">
-          <span class="section-name">Ownership</span>
-          <span class="hint-icon" data-tip="Set to &lt;100% if you only own part of the operation. The strip above the calculator gets a Company / Individual toggle that scales Results to your slice.">?</span>
-        </span>
+        <span class="section-name">Ownership</span>
       </div>
       <div class="section-body">
         <div class="field-grid">
@@ -545,17 +540,14 @@
     <section class="section site-section card-site">
       <div class="section-header">
         <span class="section-name">Site</span>
-        <button class="add-site-btn" id="add-site-btn">+ Add Site</button>
       </div>
       <div class="section-body">
-        <div class="site-chips" id="site-chips"></div>
-        <div class="site-name-row">
-          <label class="field-label" for="site-name-input">Active site name</label>
-          <div class="site-name-input-row">
-            <input type="text" class="field-input" id="site-name-input" placeholder="Site name">
-            <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
-          </div>
+        <div class="site-toolbar">
+          <input type="text" class="field-input" id="site-name-input" placeholder="Active site name">
+          <button class="add-site-btn" id="add-site-btn" title="Add a new site">+ Add</button>
+          <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
         </div>
+        <div class="site-chips" id="site-chips"></div>
       </div>
     </section>
 
