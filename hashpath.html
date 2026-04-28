@@ -841,6 +841,15 @@
 
     <hr class="settings-divider">
 
+    <div id="settings-install-wrap" style="display:none">
+      <div class="settings-section">
+        <div class="settings-section-label">Install as App</div>
+        <button class="settings-btn" id="settings-install-btn">Install HashPath</button>
+        <div class="settings-help">Adds HashPath to your home screen / app launcher and caches the calculator for offline use. Live BTC and difficulty data still need a connection.</div>
+      </div>
+      <hr class="settings-divider">
+    </div>
+
     <div class="settings-section">
       <div class="settings-section-label">Clear Data</div>
       <button class="settings-btn danger" id="settings-clear">Clear All Data</button>
@@ -860,9 +869,11 @@
     <div>
       <div class="about-section-label">Design Philosophy</div>
       <div class="about-body">
-        HashPath is a <strong>single HTML file</strong> with zero dependencies. No build system, no frameworks, no servers, no accounts, no tracking. Open it in any browser, on any OS.
+        HashPath is a <strong>single HTML file</strong> you can drop on a USB stick. No build system, no frameworks, no servers, no accounts, no tracking. Open it in any browser, on any OS.
         <br><br>
         Your inputs and saved scenarios live in your browser's local storage and never leave your device. The only outbound calls are to <strong>CoinGecko</strong> for BTC price and <strong>mempool.space</strong> for network difficulty and the halving countdown. Back up by exporting JSON; migrate by copying the HTML file and your export.
+        <br><br>
+        When served over HTTPS, an optional service worker (<code>sw.js</code>) caches the calculator for offline use. Install as a PWA from Settings.
         <br><br>
         Simple. Private. Durable.
       </div>
@@ -903,6 +914,63 @@
 
 <script>
 'use strict';
+
+// ────────────────────────────────────────────────────────────────────────────
+// PWA setup (manifest + service worker + install prompt capture)
+// ────────────────────────────────────────────────────────────────────────────
+
+(function setupPWA() {
+  if (location.protocol === 'file:') return;
+  const icon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230e0c08'/><text x='256' y='370' text-anchor='middle' font-family='Georgia,serif' font-size='320' font-style='italic' fill='%23f7931a'>H</text></svg>";
+  const manifest = {
+    name: 'HashPath - Bitcoin Mining Profitability',
+    short_name: 'HashPath',
+    description: 'Bitcoin mining profitability calculator',
+    start_url: location.href.split('?')[0],
+    display: 'standalone',
+    background_color: '#0e0c08',
+    theme_color: '#0e0c08',
+    icons: [{ src: icon, sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }]
+  };
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+  document.head.appendChild(link);
+  if ('serviceWorker' in navigator) {
+    try {
+      navigator.serviceWorker.register(new URL('sw.js', location.href).href).catch(() => {});
+    } catch (_) {}
+  }
+})();
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  syncInstallButton();
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  syncInstallButton();
+});
+
+function syncInstallButton() {
+  const wrap = document.getElementById('settings-install-wrap');
+  if (!wrap) return;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  wrap.style.display = (deferredInstallPrompt && !isStandalone) ? '' : 'none';
+}
+
+async function triggerInstallPrompt() {
+  if (!deferredInstallPrompt) return;
+  const evt = deferredInstallPrompt;
+  deferredInstallPrompt = null;
+  syncInstallButton();
+  try {
+    evt.prompt();
+    await evt.userChoice;
+  } catch (_) {}
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Constants & presets
@@ -2691,6 +2759,7 @@ function renderCapexList() {
 function openSettings() {
   $('#settings-modal').classList.remove('hidden');
   syncSettingsUI();
+  syncInstallButton();
 }
 function closeSettings() { $('#settings-modal').classList.add('hidden'); }
 function openAbout() { $('#about-modal').classList.remove('hidden'); }
@@ -3082,6 +3151,7 @@ function bindInputs() {
   $('#save-btn').addEventListener('click', saveNow);
   $('#open-about-btn').addEventListener('click', openAbout);
   $('#open-settings-btn').addEventListener('click', openSettings);
+  $('#settings-install-btn').addEventListener('click', triggerInstallPrompt);
 
   // Settings modal
   $('#settings-close').addEventListener('click', closeSettings);
