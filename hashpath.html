@@ -1414,6 +1414,11 @@ function project(s, siteId = null) {
   const allInCostPerBtc = totals.btc > 0 ? (totalCapex + totals.power + totals.fees) / totals.btc : Infinity;
   const marginalCostPerBtc = totals.btc > 0 ? (totals.power + totals.fees) / totals.btc : Infinity;
 
+  // Price at the end of the horizon (i.e. start of month horizon+1). Used for
+  // HODL valuation: assumes every BTC mined is held and marked-to-market here.
+  const initialPrice = +opts.network.btcPrice || 0;
+  const endingPrice = initialPrice * Math.pow(monthlyPriceMul, horizon);
+
   return {
     rows,
     totals,
@@ -1425,7 +1430,8 @@ function project(s, siteId = null) {
     roi,
     allInCostPerBtc,
     marginalCostPerBtc,
-    monthsToHalving
+    monthsToHalving,
+    endingPrice
   };
 }
 
@@ -1731,8 +1737,15 @@ function renderResults(p) {
   const sharedCapex = p.capex * share;
   const lifetimeProfit = p.horizonProfit * share;
 
+  // HODL valuation (assume every BTC is held and marked at the horizon price)
+  const endingPrice = p.endingPrice || 0;
+  const avgRealizedPrice = lifetimeBtc > 0 ? totalRevenue / lifetimeBtc : 0;
+  const stashAtHorizon = lifetimeBtc * endingPrice;
+  const hodlNet = stashAtHorizon - totalPower - totalFees - sharedCapex;
+
   const tbody = $('#results-tbody');
   const tip = (s) => `<span class="hint-icon" data-tip="${s.replace(/"/g, '&quot;')}">?</span>`;
+  const grossRevTip = `BTC mined × BTC price, summed month by month. Each month's BTC is valued at that month's price (not the ending price). Avg realized: ${fmtUSD(avgRealizedPrice)}/BTC.`;
   tbody.innerHTML = `
     <tr class="group-start">
       <td class="label">BTC mined ${tip('Bitcoin mined by the operation. Per-month is month 1; lifetime sums over the horizon. Halving and difficulty growth are applied through the projection.')}</td>
@@ -1740,7 +1753,7 @@ function renderResults(p) {
       <td class="r accent">${fmtBTC(lifetimeBtc, 4)}</td>
     </tr>
     <tr>
-      <td class="label">Gross revenue ${tip('BTC mined × BTC price, before any fees or costs.')}</td>
+      <td class="label">Gross revenue ${tip(grossRevTip)}</td>
       <td class="r">${fmtUSD(m1Revenue)}</td>
       <td class="r">${fmtUSD(totalRevenue)}</td>
     </tr>
@@ -1765,9 +1778,19 @@ function renderResults(p) {
       <td class="r neg">${fmtUSD(-sharedCapex)}</td>
     </tr>
     <tr class="total-row">
-      <td class="label">Net (after CapEx) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx.')}</td>
+      <td class="label">Net (sell as mined) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx. Assumes you sell each month\'s BTC at that month\'s price — the realized cash-flow model.')}</td>
       <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
       <td class="r ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}</td>
+    </tr>
+    <tr class="group-start">
+      <td class="label">BTC stash @ horizon ${tip(`Lifetime BTC × month-${p.horizon} BTC price (${fmtUSD(endingPrice)}). Mark-to-market value if you hold every BTC mined and sell at the horizon.`)}</td>
+      <td class="r sub">—</td>
+      <td class="r accent">${fmtUSD(stashAtHorizon)}</td>
+    </tr>
+    <tr class="total-row">
+      <td class="label">Net (HODL) ${tip('BTC stash @ horizon − power − pool/maintenance − CapEx. Assumes you never sell mined BTC and pay all USD costs from external reserves; sell once at the horizon price.')}</td>
+      <td class="r sub">—</td>
+      <td class="r ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}</td>
     </tr>
   `;
 }
