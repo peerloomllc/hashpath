@@ -266,6 +266,10 @@
   .results-table .sub{font-size:13px;color:var(--text-dim)}
   .results-table td.range-cell{line-height:1.35}
   .results-table td.range-cell .range-val{display:block}
+  .results-table tr.profit-divider td{border-top:2px solid var(--text-dim);padding-top:14px}
+  .results-table td.net-stack{line-height:1.4;white-space:normal}
+  .results-table td.net-stack .net-line{display:block}
+  .results-table td.net-stack .net-tag{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-left:6px}
   .results-table tr.group-start td{border-top:1px solid var(--border);padding-top:12px}
   .results-table tr.group-start:first-child td{border-top:none;padding-top:9px}
   .results-table td.label .hint-icon{margin-left:6px;border-color:var(--border)}
@@ -2071,9 +2075,7 @@ function renderResults(p) {
   const tbody = $('#results-tbody');
   const tip = (s) => `<span class="hint-icon" data-tip="${s.replace(/"/g, '&quot;')}">?</span>`;
   const grossRevTip = `BTC mined × BTC price, summed month by month. Each month's BTC is valued at that month's price (not the ending price). Avg realized: ${fmtUSD(avgRealizedPrice)}/BTC.`;
-  // Active mode's Net row gets the orange highlight; the inactive one stays plain.
-  const sellRowCls = mode === 'sell' ? 'total-row' : '';
-  const hodlRowCls = mode === 'hodl' ? 'total-row' : '';
+  const netTip = `Sell: realized cash flow if you sell each month\'s BTC at that month\'s price. HODL: wealth at horizon if you keep every BTC and mark to the month-${p.horizon} price (${fmtUSD(endingPrice)}). Both subtract upfront CapEx.`;
   tbody.innerHTML = `
     <tr class="group-start">
       <td class="label">BTC mined ${tip('Bitcoin mined by the operation. Per-month is month 1; lifetime sums over the horizon. Halving and difficulty growth are applied through the projection.')}</td>
@@ -2105,22 +2107,15 @@ function renderResults(p) {
       <td class="r sub">—</td>
       <td class="r neg">${fmtUSD(-sharedCapex)}</td>
     </tr>
-    <tr class="${sellRowCls}">
-      <td class="label">Net (sell) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx. Assumes you sell each month\'s BTC at that month\'s price — the realized cash-flow model.')}</td>
+    <tr class="profit-divider total-row">
+      <td class="label">Net Sell/HODL ${tip(netTip)}</td>
       <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
-      <td class="r ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}</td>
+      <td class="r net-stack">
+        <span class="net-line ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}<small class="net-tag">sell</small></span>
+        <span class="net-line ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}<small class="net-tag">HODL</small></span>
+      </td>
     </tr>
-    <tr class="group-start">
-      <td class="label">BTC stash @ horizon ${tip(`Lifetime BTC × month-${p.horizon} BTC price (${fmtUSD(endingPrice)}). Mark-to-market value if you hold every BTC mined and sell at the horizon.`)}</td>
-      <td class="r sub">—</td>
-      <td class="r ${stashAtHorizon>0?'pos':''}">${fmtUSD(stashAtHorizon)}</td>
-    </tr>
-    <tr class="${hodlRowCls}">
-      <td class="label">Net (HODL) ${tip('BTC stash @ horizon − power − pool/maintenance − CapEx. Assumes you never sell mined BTC and pay all USD costs from external reserves; sell once at the horizon price.')}</td>
-      <td class="r sub">—</td>
-      <td class="r ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}</td>
-    </tr>
-    ${showVarianceRow ? `<tr class="group-start">
+    ${showVarianceRow ? `<tr>
       <td class="label">90% range ${tip(`Range of ${mode === 'hodl' ? 'Net (HODL)' : 'Net (sell)'} outcomes attributable to ${varianceMode === 'tides' ? 'pool block-finding luck (PPLNS / TIDES)' : 'block-find luck (Solo)'}. Power and CapEx are luck-invariant; revenue, pool fees, and maintenance scale with realized BTC. Top number is 5th percentile (unlucky), bottom is 95th (lucky).`)}</td>
       <td class="r sub">—</td>
       <td class="r range-cell"><span class="range-val ${(mode === 'hodl' ? hodlNetLow : sellNetLow) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetLow : sellNetLow)}</span><span class="range-val ${(mode === 'hodl' ? hodlNetHigh : sellNetHigh) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetHigh : sellNetHigh)}</span></td>
