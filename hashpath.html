@@ -51,30 +51,39 @@
   .ticker-sep{color:var(--text-dim)}
 
   /* ── HEADER ── */
-  header{position:fixed;top:38px;left:0;right:0;z-index:50;border-bottom:1px solid var(--border);padding:24px 40px 20px;display:flex;align-items:flex-end;justify-content:space-between;background:var(--bg)}
-  .header-left h1{font-family:var(--serif);font-size:38px;font-weight:400;letter-spacing:-.5px;line-height:1}
+  header{position:fixed;top:38px;left:0;right:0;z-index:50;border-bottom:1px solid var(--border);padding:20px 40px 18px;display:flex;align-items:center;justify-content:center;background:var(--bg);min-height:64px;box-sizing:border-box}
+  .header-left{text-align:center}
+  .header-left h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing:-.5px;line-height:1}
   .header-left h1 span{color:var(--accent);font-style:italic}
-  .header-left .subtitle{margin-top:5px;font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
-  .header-right{text-align:right}
-  .result-label{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px}
-  .result-value{font-family:var(--serif);font-size:42px;letter-spacing:-1px;color:var(--accent);text-shadow:0 0 40px rgba(247,147,26,.3);transition:all .4s;line-height:1.05}
-  .result-value.negative{color:var(--red);text-shadow:0 0 40px rgba(224,112,112,.3)}
-  .result-sub{font-family:var(--mono);font-size:14px;color:var(--text-muted);margin-top:3px}
+  .header-left .subtitle{margin-top:4px;font-family:var(--mono);font-size:13px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
 
-  /* ── SUMMARY BAR ── */
-  .summary-bar{position:fixed;top:166px;left:0;right:0;z-index:50;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);border-bottom:1px solid var(--border);background:var(--surface)}
-  .summary-item{padding:14px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px}
-  .summary-item:last-child{border-right:none}
-  .s-label{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim)}
-  .s-value{font-family:var(--mono);font-size:26px;font-weight:500}
-  .s-value.breakeven{color:var(--accent)}
-  .s-value.breakeven.never{color:var(--red)}
-  .s-value.roi{color:var(--gold)}
-  .s-value.roi.negative{color:var(--red)}
-  .s-value.cost{color:var(--accent)}
+  /* ── KPI WALL ── */
+  .kpi-wall{display:grid;gap:14px;margin-bottom:24px;animation:fadeUp .4s ease backwards}
+  .kpi-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:6px;justify-content:center;align-items:center;text-align:center;min-height:96px}
+  .kpi-tile-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);line-height:1.2}
+  .kpi-tile-value{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--text);line-height:1.1;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi-tile-value.accent{color:var(--accent)}
+  .kpi-tile-value.gold{color:var(--gold)}
+  .kpi-tile-value.green{color:var(--green)}
+  .kpi-tile-value.red{color:var(--red)}
+  .kpi-tile-value .pos{color:var(--green)}
+  .kpi-tile-value .neg{color:var(--red)}
+  .kpi-tile-sub{font-family:var(--mono);font-size:12px;color:var(--text-dim);min-height:14px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi-tile.primary{border-color:var(--accent-dim);grid-column:span 2}
+  .kpi-tile.primary .kpi-tile-value{font-family:var(--serif);font-size:42px;color:var(--accent);text-shadow:0 0 30px rgba(247,147,26,.25);letter-spacing:-.5px;line-height:1.05;white-space:normal}
+  .kpi-tile.primary .kpi-tile-value.green{color:var(--green);text-shadow:0 0 30px rgba(168,208,141,.3)}
+  .kpi-tile.primary .kpi-tile-value.red{color:var(--red);text-shadow:0 0 30px rgba(224,112,112,.25)}
+  .kpi-tile.primary .kpi-tile-value.range{font-size:24px;line-height:1.25}
+  @media (min-width:1100px){
+    .kpi-wall{grid-template-columns:repeat(4,minmax(0,1fr))}
+  }
+  @media (max-width:1099px){
+    .kpi-wall{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .kpi-tile.primary{grid-column:span 2}
+  }
 
   /* ── TAB NAV ── */
-  .tab-nav{position:fixed;top:240px;left:0;right:0;z-index:50;display:flex;justify-content:center;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 32px}
+  .tab-nav{position:fixed;top:140px;left:0;right:0;z-index:50;display:flex;justify-content:center;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 32px}
   .tab-btn{font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:13px 18px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px}
   .tab-btn:hover{color:var(--text-muted)}
   .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -83,33 +92,50 @@
   .icon-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
 
   /* ── VIEW ── */
-  .view{display:none;position:relative;max-width:1500px;margin:0 auto;padding:296px 28px 120px}
+  .view{display:none;position:relative;max-width:1500px;margin:0 auto;padding:240px 28px 120px}
   .view.active{display:block}
 
   /* ── SECTION ── */
   .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);animation:fadeUp .4s ease backwards;margin-bottom:18px}
   .section:nth-child(2){animation-delay:.05s}
   .section:nth-child(3){animation-delay:.1s}
-  .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0}
+  .section-header{display:flex;align-items:center;justify-content:center;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0}
   .section:has(.section-body.collapsed) .section-header{border-bottom:none;border-radius:calc(var(--radius) - 1px)}
   .section-name{font-family:var(--mono);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted)}
   .section-total{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--accent)}
   .section-body{padding:14px 18px}
 
-  /* ── CALC GRID ── */
+  /* ── CALC GRID ──
+     Two-row layout: row 1 has Ownership / Site / CapEx (3 equal cards);
+     row 2 has Operating / Network (2 equal cards). 6-col underlying grid
+     so the row-1 columns line up cleanly even though row 2 has fewer cards.
+     align-items:stretch (default) makes cards in the same row match height. */
   .calc-grid{display:grid;gap:24px}
-  .calc-col-1{grid-area:col1}
-  .calc-col-2{grid-area:col2}
-  .calc-col-r{grid-area:results}
-  @media (min-width:1400px){
-    .calc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);grid-template-areas:"col1 col2 results"}
-  }
-  @media (min-width:1100px) and (max-width:1399px){
-    .calc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"col1 results" "col2 results";align-items:start}
+  .card-ownership{grid-area:ownership}
+  .card-site{grid-area:site}
+  .card-capex{grid-area:capex}
+  .card-operating{grid-area:operating}
+  .card-network{grid-area:network}
+  @media (min-width:1100px){
+    .calc-grid{
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      grid-template-areas:
+        "ownership ownership site site capex capex"
+        "operating operating operating network network network";
+    }
   }
   @media (max-width:1099px){
-    .calc-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"col1" "col2" "results"}
+    .calc-grid{
+      grid-template-columns:minmax(0,1fr);
+      grid-template-areas:"ownership" "site" "capex" "operating" "network";
+    }
   }
+
+  /* ── DETAIL SECTION (collapsible Results table at bottom) ── */
+  .detail-section{margin-top:24px}
+
+  /* ── INPUTS SECTION (collapsible wrapper around the input cards) ── */
+  .inputs-section{background:transparent}
 
   /* ── FIELD GRID ── */
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
@@ -158,23 +184,22 @@
   .power-mode-toggle button.active{background:var(--accent-glow);color:var(--accent)}
 
   /* ── SITE SWITCHER ── */
-  .site-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .site-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
   .site-chip{font-family:var(--mono);font-size:13px;letter-spacing:.5px;padding:6px 12px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text-muted);cursor:pointer;transition:all .15s}
   .site-chip:hover{color:var(--text);border-color:var(--border-light)}
   .site-chip.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent-dim)}
-  .add-site-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s}
+  .site-chip-edit{font-family:var(--mono);font-size:13px;letter-spacing:.5px;padding:6px 12px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);color:var(--text);outline:none;width:auto;min-width:6em;box-sizing:border-box;height:auto}
+  .site-toolbar{display:flex;gap:8px;align-items:center}
+  .site-toolbar .field-input{flex:1;min-width:0}
+  .add-site-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;height:34px}
   .add-site-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
-  .site-name-row{display:flex;flex-direction:column;gap:4px}
-  .site-name-input-row{display:flex;gap:8px}
-  .site-name-input-row .field-input{flex:1}
   .site-remove-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:13px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;height:34px}
   .site-remove-btn:hover{color:var(--red);border-color:var(--red-dim)}
   .site-remove-btn:disabled{opacity:.4;cursor:not-allowed}
   .site-remove-btn:disabled:hover{color:var(--text-dim);border-color:var(--border)}
 
   /* ── RESULTS STRIP (fixed, persistent across tabs) ── */
-  .results-site-strip{position:fixed;top:283px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
-  .view{padding-top:336px}
+  .results-site-strip{position:fixed;top:184px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
   .results-site-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
   .results-site-chips{display:flex;flex-wrap:wrap;gap:5px}
   .results-site-chip{font-family:var(--mono);font-size:12px;letter-spacing:.5px;padding:3px 10px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text-muted);cursor:pointer;transition:all .15s}
@@ -241,6 +266,10 @@
   .results-table .sub{font-size:13px;color:var(--text-dim)}
   .results-table td.range-cell{line-height:1.35}
   .results-table td.range-cell .range-val{display:block}
+  .results-table tr.profit-divider td{border-top:2px solid var(--text-dim);padding-top:14px}
+  .results-table td.net-stack{line-height:1.4;white-space:normal}
+  .results-table td.net-stack .net-line{display:block}
+  .results-table td.net-stack .net-tag{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-left:6px}
   .results-table tr.group-start td{border-top:1px solid var(--border);padding-top:12px}
   .results-table tr.group-start:first-child td{border-top:none;padding-top:9px}
   .results-table td.label .hint-icon{margin-left:6px;border-color:var(--border)}
@@ -383,17 +412,16 @@
   @media (max-width:780px){
     body{font-size:16px}
     .btc-bar{position:static;font-size:12px;gap:4px 10px;padding:6px 10px}
-    header{position:static;padding:18px 18px 14px;flex-direction:column;align-items:flex-start;gap:12px}
-    .header-left h1{font-size:30px}
-    .header-right{text-align:left}
-    .result-value{font-size:34px}
-    .summary-bar{position:static;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+    header{position:static;padding:18px 18px 14px;flex-direction:column;align-items:flex-start;gap:8px;min-height:0}
+    .header-left h1{font-size:28px}
     .results-table th,.results-table td{white-space:normal}
-    .s-value{font-size:18px}
     .tab-nav{position:static;padding:0 12px;flex-wrap:wrap}
     .tab-btn{font-size:13px;padding:11px 12px}
     .results-site-strip{position:static}
     .view{padding:24px 14px 60px}
+    .kpi-tile-value{font-size:22px}
+    .kpi-tile.primary .kpi-tile-value{font-size:32px}
+    .kpi-tile.primary .kpi-tile-value.range{font-size:20px}
     .calc-grid{gap:14px}
     .miner-fields{grid-template-columns:1fr 1fr;padding-left:18px}
     .field-grid{grid-template-columns:1fr}
@@ -430,28 +458,7 @@
     <h1>Hash<span>Path</span></h1>
     <div class="subtitle">Bitcoin Mining Profitability</div>
   </div>
-  <div class="header-right">
-    <div class="result-label" id="result-label">Net Profit / Month</div>
-    <div class="result-value" id="result-net-monthly">—</div>
-    <div class="result-sub" id="result-net-monthly-sats">—</div>
-  </div>
 </header>
-
-<!-- SUMMARY BAR -->
-<div class="summary-bar">
-  <div class="summary-item">
-    <div class="s-label">Break-even</div>
-    <div class="s-value breakeven" id="kpi-breakeven">—</div>
-  </div>
-  <div class="summary-item">
-    <div class="s-label">ROI at horizon</div>
-    <div class="s-value roi" id="kpi-roi">—</div>
-  </div>
-  <div class="summary-item">
-    <div class="s-label">All-in cost / BTC</div>
-    <div class="s-value cost" id="kpi-cost-per-btc">—</div>
-  </div>
-</div>
 
 <!-- TAB NAV -->
 <nav class="tab-nav">
@@ -480,257 +487,293 @@
 
 <!-- CALCULATOR VIEW -->
 <main class="view active" id="view-calc">
+
+  <!-- KPI WALL -->
+  <section class="kpi-wall">
+    <div class="kpi-tile primary">
+      <div class="kpi-tile-label" id="kpi-net-label">Net Profit (Lifetime)</div>
+      <div class="kpi-tile-value" id="kpi-net">—</div>
+      <div class="kpi-tile-sub" id="kpi-net-sub">—</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-tile-label">Break-even</div>
+      <div class="kpi-tile-value" id="kpi-breakeven">—</div>
+      <div class="kpi-tile-sub" id="kpi-breakeven-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-tile-label">ROI at horizon</div>
+      <div class="kpi-tile-value" id="kpi-roi">—</div>
+      <div class="kpi-tile-sub" id="kpi-roi-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-tile-label">BTC mined (lifetime)</div>
+      <div class="kpi-tile-value" id="kpi-btc">—</div>
+      <div class="kpi-tile-sub" id="kpi-btc-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-tile-label">All-in cost / BTC</div>
+      <div class="kpi-tile-value" id="kpi-cost-per-btc">—</div>
+      <div class="kpi-tile-sub" id="kpi-cost-per-btc-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-tile-label">BTC stash @ horizon</div>
+      <div class="kpi-tile-value" id="kpi-stash">—</div>
+      <div class="kpi-tile-sub" id="kpi-stash-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-tile-label" id="kpi-aux-label">Total CapEx</div>
+      <div class="kpi-tile-value" id="kpi-aux">—</div>
+      <div class="kpi-tile-sub" id="kpi-aux-sub">&nbsp;</div>
+    </div>
+  </section>
+
+  <!-- DETAIL BREAKDOWN (collapsible Results table) -->
+  <section class="section detail-section">
+    <div class="section-header collapsible" id="detail-header">
+      <span class="section-name-wrap">
+        <span class="section-arrow" id="detail-arrow">▶</span>
+        <span class="section-name">Detail breakdown</span>
+      </span>
+    </div>
+    <div class="section-body collapsed" id="detail-body">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th class="r">Per month</th>
+            <th class="r">Lifetime</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- INPUTS (collapsible) -->
+  <section class="section inputs-section">
+    <div class="section-header collapsible" id="inputs-header">
+      <span class="section-name-wrap">
+        <span class="section-arrow" id="inputs-arrow">▶</span>
+        <span class="section-name">Inputs</span>
+      </span>
+    </div>
+    <div class="section-body" id="inputs-body">
   <div class="calc-grid">
 
-    <!-- COL 1: SITE + CAPEX -->
-    <div class="calc-col-1">
-      <!-- SITE SWITCHER -->
-      <section class="section site-section">
-        <div class="section-header">
-          <span class="section-name">Site</span>
-          <button class="add-site-btn" id="add-site-btn">+ Add Site</button>
-        </div>
-        <div class="section-body">
-          <div class="site-chips" id="site-chips"></div>
-          <div class="site-name-row">
-            <label class="field-label" for="site-name-input">Active site name</label>
-            <div class="site-name-input-row">
-              <input type="text" class="field-input" id="site-name-input" placeholder="Site name">
-              <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
+    <!-- OWNERSHIP -->
+    <section class="section card-ownership">
+      <div class="section-header">
+        <span class="section-name">Ownership</span>
+      </div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field-group full">
+            <label class="field-label">Your share</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="ownership-share" min="0" max="100" step="0.1" value="100">
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- CAPEX -->
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name">CapEx</span>
-          <span class="section-total" id="hw-capex-total">$0</span>
+    <!-- SITE SWITCHER -->
+    <section class="section site-section card-site">
+      <div class="section-header">
+        <span class="section-name">Site</span>
+      </div>
+      <div class="section-body">
+        <div class="site-toolbar">
+          <input type="text" class="field-input" id="site-name-input" placeholder="New site name">
+          <button class="add-site-btn" id="add-site-btn" title="Add a new site">+ Add</button>
+          <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
         </div>
-        <div class="capex-subsection miners-subsection">
-          <div class="capex-header" id="miners-header">
-            <span class="capex-toggle-arrow" id="miners-arrow">▶</span>
-            <span class="capex-label">Miners</span>
-            <span class="capex-total" id="miners-subtotal">$0</span>
-          </div>
-          <div class="capex-body" id="miners-body">
-            <div class="miners-list" id="miners-list"></div>
-            <div class="add-row" id="add-miner-row">
-              <button class="add-row-btn add-miner-trigger" id="add-miner-trigger">+ Add Miner</button>
-              <div class="add-miner-controls">
-                <select class="preset-select" id="preset-select"></select>
-                <button class="add-row-btn" id="add-custom-btn">+ Custom</button>
-                <button class="add-row-cancel" id="cancel-add-miner" title="Cancel">&#10005;</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="capex-subsection">
-          <div class="capex-header" id="capex-header">
-            <span class="capex-toggle-arrow" id="capex-arrow">▶</span>
-            <span class="capex-label">Other CapEx</span>
-            <span class="capex-total" id="capex-subtotal">$0</span>
-          </div>
-          <div class="capex-body" id="capex-body">
-            <div class="capex-list" id="capex-list"></div>
-            <button class="capex-add-btn" id="capex-add-btn">+ Add CapEx</button>
-          </div>
-        </div>
-        <div class="fleet-summary">
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Hashrate</div>
-            <div class="fleet-stat-value" id="fleet-hashrate">— TH/s</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Power</div>
-            <div class="fleet-stat-value" id="fleet-power">— kW</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Efficiency</div>
-            <div class="fleet-stat-value" id="fleet-efficiency">— J/TH</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Units</div>
-            <div class="fleet-stat-value" id="fleet-units">0</div>
-          </div>
-        </div>
-      </section>
-    </div>
+        <div class="site-chips" id="site-chips"></div>
+      </div>
+    </section>
 
-    <!-- COL 2: OPERATING + OWNERSHIP + NETWORK -->
-    <div class="calc-col-2">
-      <!-- OPERATING -->
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name">Operating</span>
+    <!-- CAPEX -->
+    <section class="section card-capex">
+      <div class="section-header">
+        <span class="section-name">CapEx</span>
+      </div>
+      <div class="capex-subsection miners-subsection">
+        <div class="capex-header" id="miners-header">
+          <span class="capex-toggle-arrow" id="miners-arrow">▶</span>
+          <span class="capex-label">Miners</span>
+          <span class="capex-total" id="miners-subtotal">$0</span>
         </div>
-        <div class="section-body">
-          <div class="power-mode-toggle" id="power-mode-toggle">
-            <button data-mode="kwh" class="active">$/kWh (direct)</button>
-            <button data-mode="colo">$/kW/month (hosted)</button>
-          </div>
-          <div class="field-grid">
-            <div class="field-group" id="field-elec-rate-wrap">
-              <label class="field-label">Electricity rate</label>
-              <div class="field-suffix" data-suffix="$/kWh">
-                <input type="number" class="field-input" id="elec-rate" min="0" step="0.001" value="0.07">
-              </div>
-            </div>
-            <div class="field-group" id="field-colo-rate-wrap" style="display:none">
-              <label class="field-label">Hosting rate</label>
-              <div class="field-suffix long" data-suffix="$/kW/mo">
-                <input type="number" class="field-input" id="colo-rate" min="0" step="1" value="100">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Pool fee</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="pool-fee" min="0" max="100" step="0.1" value="1.5">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Payout model
-                <span class="hint-icon" data-tip="FPPS / PPS pays expected value of every share - pool absorbs all variance. PPLNS / TIDES (e.g. Ocean) is non-custodial - your payout rides the pool's block-finding luck (moderate variance, tightens over long horizons). Solo means you only get paid when YOU find a block - huge variance for typical hardware. Affects only the variance band shown next to lifetime BTC; expected values are unchanged.">?</span>
-              </label>
-              <select class="field-input" id="payout-model">
-                <option value="fpps">FPPS / PPS</option>
-                <option value="tides">PPLNS / TIDES</option>
-                <option value="solo">Solo</option>
-              </select>
-            </div>
-            <div class="field-group" id="field-pool-share-wrap" style="display:none">
-              <label class="field-label">Pool hashrate share
-                <span class="hint-icon" data-tip="The pool's share of total network hashrate. Drives how often the pool finds blocks, which sets the variance band. Default 1.5% is roughly Ocean's share; use the pool's published share if you know it.">?</span>
-              </label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="pool-network-share" min="0.001" max="100" step="0.1" value="1.5">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Uptime</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="uptime" min="0" max="100" step="0.1" value="98">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Maintenance overhead</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="maintenance" min="0" max="100" step="0.1" value="2">
-              </div>
+        <div class="capex-body" id="miners-body">
+          <div class="miners-list" id="miners-list"></div>
+          <div class="add-row" id="add-miner-row">
+            <button class="add-row-btn add-miner-trigger" id="add-miner-trigger">+ Add Miner</button>
+            <div class="add-miner-controls">
+              <select class="preset-select" id="preset-select"></select>
+              <button class="add-row-btn" id="add-custom-btn">+ Custom</button>
+              <button class="add-row-cancel" id="cancel-add-miner" title="Cancel">&#10005;</button>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+      <div class="capex-subsection">
+        <div class="capex-header" id="capex-header">
+          <span class="capex-toggle-arrow" id="capex-arrow">▶</span>
+          <span class="capex-label">Other</span>
+          <span class="capex-total" id="capex-subtotal">$0</span>
+        </div>
+        <div class="capex-body" id="capex-body">
+          <div class="capex-list" id="capex-list"></div>
+          <button class="capex-add-btn" id="capex-add-btn">+ Add CapEx</button>
+        </div>
+      </div>
+      <div class="fleet-summary">
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Hashrate</div>
+          <div class="fleet-stat-value" id="fleet-hashrate">— TH/s</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Power</div>
+          <div class="fleet-stat-value" id="fleet-power">— kW</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Efficiency</div>
+          <div class="fleet-stat-value" id="fleet-efficiency">— J/TH</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Units</div>
+          <div class="fleet-stat-value" id="fleet-units">0</div>
+        </div>
+      </div>
+    </section>
 
-      <!-- OWNERSHIP -->
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name-wrap">
-            <span class="section-name">Ownership</span>
-            <span class="hint-icon" data-tip="Set to &lt;100% if you only own part of the operation. The strip above the calculator gets a Company / Individual toggle that scales Results to your slice.">?</span>
-          </span>
+    <!-- OPERATING -->
+    <section class="section card-operating">
+      <div class="section-header">
+        <span class="section-name">Operating</span>
+      </div>
+      <div class="section-body">
+        <div class="power-mode-toggle" id="power-mode-toggle">
+          <button data-mode="kwh" class="active">$/kWh (direct)</button>
+          <button data-mode="colo">$/kW/month (hosted)</button>
         </div>
-        <div class="section-body">
-          <div class="field-grid">
-            <div class="field-group full">
-              <label class="field-label">Your share</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="ownership-share" min="0" max="100" step="0.1" value="100">
-              </div>
+        <div class="field-grid">
+          <div class="field-group" id="field-elec-rate-wrap">
+            <label class="field-label">Electricity rate</label>
+            <div class="field-suffix" data-suffix="$/kWh">
+              <input type="number" class="field-input" id="elec-rate" min="0" step="0.001" value="0.07">
+            </div>
+          </div>
+          <div class="field-group" id="field-colo-rate-wrap" style="display:none">
+            <label class="field-label">Hosting rate</label>
+            <div class="field-suffix long" data-suffix="$/kW/mo">
+              <input type="number" class="field-input" id="colo-rate" min="0" step="1" value="100">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Pool fee</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="pool-fee" min="0" max="100" step="0.1" value="1.5">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Payout model
+              <span class="hint-icon" data-tip="FPPS / PPS pays expected value of every share - pool absorbs all variance. PPLNS / TIDES (e.g. Ocean) is non-custodial - your payout rides the pool's block-finding luck (moderate variance, tightens over long horizons). Solo means you only get paid when YOU find a block - huge variance for typical hardware. Affects only the variance band shown next to lifetime BTC; expected values are unchanged.">?</span>
+            </label>
+            <select class="field-input" id="payout-model">
+              <option value="fpps">FPPS / PPS</option>
+              <option value="tides">PPLNS / TIDES</option>
+              <option value="solo">Solo</option>
+            </select>
+          </div>
+          <div class="field-group" id="field-pool-share-wrap" style="display:none">
+            <label class="field-label">Pool hashrate share
+              <span class="hint-icon" data-tip="The pool's share of total network hashrate. Drives how often the pool finds blocks, which sets the variance band. Default 1.5% is roughly Ocean's share; use the pool's published share if you know it.">?</span>
+            </label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="pool-network-share" min="0.001" max="100" step="0.1" value="1.5">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Uptime</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="uptime" min="0" max="100" step="0.1" value="98">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Maintenance overhead</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="maintenance" min="0" max="100" step="0.1" value="2">
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- NETWORK / MARKET -->
-      <section class="section">
-        <div class="section-header collapsible" id="network-header">
-          <span class="section-name-wrap">
-            <span class="section-arrow" id="network-arrow">▶</span>
-            <span class="section-name">Network & Market</span>
-          </span>
-        </div>
-        <div class="section-body collapsed" id="network-body">
-          <div class="field-grid">
-            <div class="field-group">
-              <label class="field-label">Block reward</label>
-              <div class="field-suffix" data-suffix="BTC">
-                <input type="number" class="field-input" id="block-reward" min="0" step="0.0001" value="3.125">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Time horizon</label>
-              <div class="field-suffix long" data-suffix="months">
-                <input type="number" class="field-input" id="horizon" min="1" max="120" step="1" value="36">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Long-term diff growth</label>
-              <div class="field-suffix long" data-suffix="%/yr">
-                <input type="number" class="field-input" id="diff-growth" step="0.1" value="30">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">BTC price growth</label>
-              <div class="field-suffix long" data-suffix="%/mo">
-                <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Energy inflation <span class="hint-icon" data-tip="Annual % escalator applied to both your $/kWh rate and any $/kW/mo hosting rate, compounded monthly across the projection. Applied globally because most operators run a single utility or contract structure — if you have mixed contracts (e.g. fixed-rate solar vs grid PPI+1%), enter a blended estimate.">?</span></label>
-              <div class="field-suffix long" data-suffix="%/yr">
-                <input type="number" class="field-input" id="energy-inflation" step="0.1" value="0">
-              </div>
+    <!-- NETWORK & MARKET (always expanded) -->
+    <section class="section card-network">
+      <div class="section-header">
+        <span class="section-name">Network & Market</span>
+      </div>
+      <div class="section-body" id="network-body">
+        <div class="field-grid">
+          <div class="field-group">
+            <label class="field-label">Block reward</label>
+            <div class="field-suffix" data-suffix="BTC">
+              <input type="number" class="field-input" id="block-reward" min="0" step="0.0001" value="3.125">
             </div>
           </div>
-          <button class="advanced-toggle" id="network-advanced-toggle" type="button">+ Show live values (auto-fetched)</button>
-          <div class="field-grid advanced collapsed" id="network-advanced">
-            <div class="field-group">
-              <label class="field-label">BTC price <span class="live-dot" id="dot-btc"></span></label>
-              <div class="field-suffix" data-suffix="USD">
-                <input type="number" class="field-input" id="btc-price" min="0" step="100">
-              </div>
+          <div class="field-group">
+            <label class="field-label">Time horizon</label>
+            <div class="field-suffix long" data-suffix="months">
+              <input type="number" class="field-input" id="horizon" min="1" max="120" step="1" value="36">
             </div>
-            <div class="field-group">
-              <label class="field-label">Network difficulty <span class="live-dot" id="dot-diff"></span></label>
-              <div class="field-suffix" data-suffix="T">
-                <input type="number" class="field-input" id="difficulty" min="0" step="0.01">
-              </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Long-term diff growth</label>
+            <div class="field-suffix long" data-suffix="%/yr">
+              <input type="number" class="field-input" id="diff-growth" step="0.1" value="30">
             </div>
-            <div class="field-group full">
-              <label class="field-label">Next adjustment <span class="live-dot" id="dot-adj"></span></label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="next-adj" step="0.01" value="0">
-              </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">BTC price growth</label>
+            <div class="field-suffix long" data-suffix="%/mo">
+              <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Energy inflation <span class="hint-icon" data-tip="Annual % escalator applied to both your $/kWh rate and any $/kW/mo hosting rate, compounded monthly across the projection. Applied globally because most operators run a single utility or contract structure — if you have mixed contracts (e.g. fixed-rate solar vs grid PPI+1%), enter a blended estimate.">?</span></label>
+            <div class="field-suffix long" data-suffix="%/yr">
+              <input type="number" class="field-input" id="energy-inflation" step="0.1" value="0">
             </div>
           </div>
         </div>
-      </section>
-    </div>
-
-    <!-- COL 3: RESULTS -->
-    <div class="calc-col-r">
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name">Results</span>
-          <span class="section-total" id="results-headline">$0</span>
+        <button class="advanced-toggle" id="network-advanced-toggle" type="button">+ Show live values (auto-fetched)</button>
+        <div class="field-grid advanced collapsed" id="network-advanced">
+          <div class="field-group">
+            <label class="field-label">BTC price <span class="live-dot" id="dot-btc"></span></label>
+            <div class="field-suffix" data-suffix="USD">
+              <input type="number" class="field-input" id="btc-price" min="0" step="100">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Network difficulty <span class="live-dot" id="dot-diff"></span></label>
+            <div class="field-suffix" data-suffix="T">
+              <input type="number" class="field-input" id="difficulty" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="field-group full">
+            <label class="field-label">Next adjustment <span class="live-dot" id="dot-adj"></span></label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="next-adj" step="0.01" value="0">
+            </div>
+          </div>
         </div>
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th class="r">Per month</th>
-              <th class="r">Lifetime</th>
-            </tr>
-          </thead>
-          <tbody id="results-tbody"></tbody>
-        </table>
-      </section>
-
-    </div>
+      </div>
+    </section>
 
   </div>
+    </div>
+  </section>
 </main>
 
 <!-- CHARTS VIEW -->
@@ -1038,7 +1081,7 @@ const state = {
     energyInflationYrPct: 0,
     horizonMonths: 36
   },
-  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false },
+  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false, detailExpanded:false, inputsExpanded:true },
   scenarios: [],
   // Cached live data (informational only — display in ticker)
   live: {
@@ -1108,7 +1151,9 @@ function persist() {
         minersExpanded: state.ui.minersExpanded,
         capexExpanded: state.ui.capexExpanded,
         networkExpanded: state.ui.networkExpanded,
-        networkAdvancedExpanded: state.ui.networkAdvancedExpanded
+        networkAdvancedExpanded: state.ui.networkAdvancedExpanded,
+        detailExpanded: state.ui.detailExpanded,
+        inputsExpanded: state.ui.inputsExpanded
       },
       scenarios: state.scenarios
     };
@@ -1136,7 +1181,7 @@ function migrateSnapshot(snap) {
   // CapEx legacy
   if (!Array.isArray(out.capexItems)) {
     if (typeof out.otherCapex === 'number' && out.otherCapex > 0) {
-      out.capexItems = [{ id: 'cx-' + Math.random().toString(36).slice(2,9), name:'Other CapEx', amount: out.otherCapex }];
+      out.capexItems = [{ id: 'cx-' + Math.random().toString(36).slice(2,9), name:'Other', amount: out.otherCapex }];
     } else {
       out.capexItems = [];
     }
@@ -1191,6 +1236,8 @@ function applySnapshotData(snap) {
     state.ui.minersExpanded = !!snap.ui.minersExpanded;
     state.ui.capexExpanded = !!snap.ui.capexExpanded;
     state.ui.networkExpanded = !!snap.ui.networkExpanded;
+    state.ui.detailExpanded = !!snap.ui.detailExpanded;
+    state.ui.inputsExpanded = snap.ui.inputsExpanded !== false;
     state.ui.networkAdvancedExpanded = !!snap.ui.networkAdvancedExpanded;
     if (snap.ui.activeSiteId) state.ui.activeSiteId = snap.ui.activeSiteId;
     if (snap.ui.resultsSiteId) state.ui.resultsSiteId = snap.ui.resultsSiteId;
@@ -1882,31 +1929,47 @@ function updateMinerSummary(id) {
 }
 
 function renderHardwareSummary(p) {
-  $('#hw-capex-total').textContent = fmtUSD(p.capex);
   $('#fleet-hashrate').textContent = fmtNum(p.fleet.hashrate, 1) + ' TH/s';
   $('#fleet-power').textContent = fmtNum(p.fleet.watts/1000, 2) + ' kW';
   $('#fleet-efficiency').textContent = p.fleet.efficiency != null ? p.fleet.efficiency.toFixed(1) + ' J/TH' : '—';
   $('#fleet-units').textContent = p.fleet.units;
 }
 
+function setKpi(id, text, modifier) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (text != null) el.textContent = text;
+  el.classList.remove('accent', 'gold', 'green', 'red', 'range');
+  if (modifier) el.classList.add(modifier);
+}
+
+function setKpiSub(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text || ' ';
+}
+
 function renderResults(p) {
   const mode = state.ui.strategyMode === 'hodl' ? 'hodl' : 'sell';
-  const headline = $('#result-net-monthly');
-  const sub = $('#result-net-monthly-sats');
-  const headlineLabel = $('#result-label');
 
   if (p.fleet.hashrate <= 0) {
-    headline.textContent = '—';
-    headline.className = 'result-value';
-    if (headlineLabel) headlineLabel.textContent = mode === 'hodl' ? 'Net Wealth @ Horizon' : 'Net Profit / Month';
-    sub.textContent = 'Add at least one miner to start';
-    $('#kpi-breakeven').textContent = '—';
-    $('#kpi-breakeven').className = 's-value breakeven';
-    $('#kpi-roi').textContent = '—';
-    $('#kpi-roi').className = 's-value roi';
-    $('#kpi-cost-per-btc').textContent = '—';
-    $('#results-tbody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:24px">Add a miner to see results</td></tr>';
-    $('#results-headline').textContent = '$0';
+    $('#kpi-net-label').textContent = mode === 'hodl' ? 'Net Wealth @ Horizon' : 'Net Profit (Lifetime)';
+    setKpi('kpi-net', '—');
+    setKpiSub('kpi-net-sub', 'Add at least one miner to start');
+    setKpi('kpi-breakeven', '—');
+    setKpiSub('kpi-breakeven-sub', '');
+    setKpi('kpi-roi', '—');
+    setKpiSub('kpi-roi-sub', '');
+    setKpi('kpi-btc', '—');
+    setKpiSub('kpi-btc-sub', '');
+    setKpi('kpi-cost-per-btc', '—');
+    setKpiSub('kpi-cost-per-btc-sub', '');
+    setKpi('kpi-stash', '—');
+    setKpiSub('kpi-stash-sub', '');
+    $('#kpi-aux-label').textContent = 'Total CapEx';
+    setKpi('kpi-aux', '—');
+    setKpiSub('kpi-aux-sub', '');
+    $('#results-tbody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:24px">Add a miner to see the full breakdown</td></tr>';
     return;
   }
 
@@ -1947,52 +2010,72 @@ function renderResults(p) {
   const hodlNetHigh = (stashAtHorizon - totalFees) * ratioHigh - totalPower - sharedCapex;
   const showVarianceRow = varianceMode !== 'fpps' && lifetimeBtc > 0 && (lifetimeBtcHigh - lifetimeBtcLow) > 0;
 
-  // Headline + section total per active strategy
+  // Net (primary tile) - active strategy drives label, value, and sub
   if (mode === 'hodl') {
-    if (headlineLabel) headlineLabel.textContent = 'Net Wealth @ Horizon';
-    headline.textContent = fmtUSD(hodlNet);
-    headline.className = 'result-value' + (hodlNet < 0 ? ' negative' : '');
-    sub.textContent = stashAtHorizon > 0
-      ? 'BTC stash worth ' + fmtUSD(stashAtHorizon) + ' at month-' + p.horizon + ' price (' + fmtUSD(endingPrice) + ')'
-      : '—';
-    $('#results-headline').textContent = fmtUSD(hodlNet);
+    $('#kpi-net-label').textContent = 'Net Wealth @ Horizon';
+    setKpi('kpi-net', fmtUSD(hodlNet), hodlNet < 0 ? 'red' : 'green');
+    setKpiSub('kpi-net-sub',
+      stashAtHorizon > 0
+        ? `BTC stash ${fmtUSD(stashAtHorizon)} at month-${p.horizon} price (${fmtUSD(endingPrice)})`
+        : '');
   } else {
-    if (headlineLabel) headlineLabel.textContent = 'Net Profit / Month';
-    headline.textContent = fmtUSD(m1Net);
-    headline.className = 'result-value' + (m1Net < 0 ? ' negative' : '');
+    $('#kpi-net-label').textContent = 'Net Profit (Lifetime)';
+    setKpi('kpi-net', fmtUSD(lifetimeProfit), lifetimeProfit < 0 ? 'red' : 'green');
     const monthSats = m1Net > 0 && state.network.btcPrice > 0
       ? Math.round((m1Net / state.network.btcPrice) * 1e8)
       : 0;
-    sub.textContent = m1Net > 0
-      ? 'profit ≈ ' + monthSats.toLocaleString('en-US') + ' sats / mo at today\'s price'
-      : (m1Net < 0 ? 'unprofitable at month 1' : '—');
-    $('#results-headline').textContent = fmtUSD(lifetimeProfit);
+    const m1Sub = m1Net > 0
+      ? `${fmtUSD(m1Net)} / mo (m1) · ≈ ${monthSats.toLocaleString('en-US')} sats`
+      : (m1Net < 0 ? `${fmtUSD(m1Net)} / mo (m1) · unprofitable at month 1` : '—');
+    setKpiSub('kpi-net-sub', m1Sub);
   }
 
-  // KPIs (share-invariant — describe the operation, not the partner's slice)
-  const kBe = $('#kpi-breakeven');
+  // Break-even, ROI, all-in cost per BTC (mode-aware where applicable)
   const beMonth = mode === 'hodl' ? p.hodlBreakevenMonth : p.breakevenMonth;
   if (beMonth == null) {
-    kBe.textContent = 'Never';
-    kBe.className = 's-value breakeven never';
+    setKpi('kpi-breakeven', 'Never', 'red');
   } else {
-    kBe.textContent = beMonth + ' mo';
-    kBe.className = 's-value breakeven';
+    setKpi('kpi-breakeven', beMonth + ' mo', 'accent');
   }
+  setKpiSub('kpi-breakeven-sub', mode === 'hodl' ? 'HODL valuation' : 'realized cash flow');
 
-  const kRoi = $('#kpi-roi');
   const roi = mode === 'hodl' ? p.hodlRoi : p.roi;
-  kRoi.textContent = fmtPct(roi);
-  kRoi.className = 's-value roi' + (roi < 0 ? ' negative' : '');
+  setKpi('kpi-roi', fmtPct(roi), roi < 0 ? 'red' : 'gold');
+  setKpiSub('kpi-roi-sub', `over ${p.horizon} mo`);
 
-  $('#kpi-cost-per-btc').textContent = isFinite(p.allInCostPerBtc) ? fmtUSD(p.allInCostPerBtc) : '—';
+  setKpi('kpi-cost-per-btc', isFinite(p.allInCostPerBtc) ? fmtUSD(p.allInCostPerBtc) : '—', 'green');
+  setKpiSub('kpi-cost-per-btc-sub',
+    isFinite(p.marginalCostPerBtc) ? `marginal ${fmtUSD(p.marginalCostPerBtc)}` : '');
+
+  // BTC mined, Stash @ horizon
+  setKpi('kpi-btc', fmtBTC(lifetimeBtc, 4), 'accent');
+  setKpiSub('kpi-btc-sub', `${fmtBTC(m1Btc, 5)} / mo (m1)`);
+
+  setKpi('kpi-stash', fmtUSD(stashAtHorizon), 'green');
+  setKpiSub('kpi-stash-sub', endingPrice > 0 ? `at ${fmtUSD(endingPrice)}/btc (m${p.horizon})` : '');
+
+  // Aux tile: 90% range when payout model is non-FPPS, otherwise total CapEx
+  const auxEl = document.getElementById('kpi-aux');
+  if (showVarianceRow) {
+    const lo = mode === 'hodl' ? hodlNetLow : sellNetLow;
+    const hi = mode === 'hodl' ? hodlNetHigh : sellNetHigh;
+    $('#kpi-aux-label').textContent = `${mode === 'hodl' ? 'Net (HODL)' : 'Net (sell)'}, 90% range`;
+    auxEl.classList.remove('accent', 'gold', 'green', 'red');
+    auxEl.classList.add('range');
+    auxEl.innerHTML = `<span class="${lo>=0?'pos':'neg'}">${fmtUSD(lo)}</span><br><span class="${hi>=0?'pos':'neg'}">${fmtUSD(hi)}</span>`;
+    setKpiSub('kpi-aux-sub', `5th to 95th percentile · ${varianceMode === 'tides' ? 'TIDES' : 'Solo'}`);
+  } else {
+    auxEl.classList.remove('range');
+    $('#kpi-aux-label').textContent = 'Total CapEx';
+    auxEl.innerHTML = '';
+    setKpi('kpi-aux', fmtUSD(sharedCapex), 'green');
+    setKpiSub('kpi-aux-sub', `${p.fleet.units} unit${p.fleet.units === 1 ? '' : 's'}`);
+  }
 
   const tbody = $('#results-tbody');
   const tip = (s) => `<span class="hint-icon" data-tip="${s.replace(/"/g, '&quot;')}">?</span>`;
   const grossRevTip = `BTC mined × BTC price, summed month by month. Each month's BTC is valued at that month's price (not the ending price). Avg realized: ${fmtUSD(avgRealizedPrice)}/BTC.`;
-  // Active mode's Net row gets the orange highlight; the inactive one stays plain.
-  const sellRowCls = mode === 'sell' ? 'total-row' : '';
-  const hodlRowCls = mode === 'hodl' ? 'total-row' : '';
+  const netTip = `Sell: realized cash flow if you sell each month\'s BTC at that month\'s price. HODL: wealth at horizon if you keep every BTC and mark to the month-${p.horizon} price (${fmtUSD(endingPrice)}). Both subtract upfront CapEx.`;
   tbody.innerHTML = `
     <tr class="group-start">
       <td class="label">BTC mined ${tip('Bitcoin mined by the operation. Per-month is month 1; lifetime sums over the horizon. Halving and difficulty growth are applied through the projection.')}</td>
@@ -2001,8 +2084,8 @@ function renderResults(p) {
     </tr>
     <tr>
       <td class="label">Gross revenue ${tip(grossRevTip)}</td>
-      <td class="r">${fmtUSD(m1Revenue)}</td>
-      <td class="r">${fmtUSD(totalRevenue)}</td>
+      <td class="r ${m1Revenue>0?'pos':''}">${fmtUSD(m1Revenue)}</td>
+      <td class="r ${totalRevenue>0?'pos':''}">${fmtUSD(totalRevenue)}</td>
     </tr>
     <tr class="group-start">
       <td class="label">Power cost ${tip('Either kWh × electricity rate, or kW × hosting rate per month, scaled by uptime %.')}</td>
@@ -2024,22 +2107,15 @@ function renderResults(p) {
       <td class="r sub">—</td>
       <td class="r neg">${fmtUSD(-sharedCapex)}</td>
     </tr>
-    <tr class="${sellRowCls}">
-      <td class="label">Net (sell) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx. Assumes you sell each month\'s BTC at that month\'s price — the realized cash-flow model.')}</td>
+    <tr class="profit-divider total-row">
+      <td class="label">Net Sell/HODL ${tip(netTip)}</td>
       <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
-      <td class="r ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}</td>
+      <td class="r net-stack">
+        <span class="net-line ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}<small class="net-tag">sell</small></span>
+        <span class="net-line ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}<small class="net-tag">HODL</small></span>
+      </td>
     </tr>
-    <tr class="group-start">
-      <td class="label">BTC stash @ horizon ${tip(`Lifetime BTC × month-${p.horizon} BTC price (${fmtUSD(endingPrice)}). Mark-to-market value if you hold every BTC mined and sell at the horizon.`)}</td>
-      <td class="r sub">—</td>
-      <td class="r accent">${fmtUSD(stashAtHorizon)}</td>
-    </tr>
-    <tr class="${hodlRowCls}">
-      <td class="label">Net (HODL) ${tip('BTC stash @ horizon − power − pool/maintenance − CapEx. Assumes you never sell mined BTC and pay all USD costs from external reserves; sell once at the horizon price.')}</td>
-      <td class="r sub">—</td>
-      <td class="r ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}</td>
-    </tr>
-    ${showVarianceRow ? `<tr class="group-start">
+    ${showVarianceRow ? `<tr>
       <td class="label">90% range ${tip(`Range of ${mode === 'hodl' ? 'Net (HODL)' : 'Net (sell)'} outcomes attributable to ${varianceMode === 'tides' ? 'pool block-finding luck (PPLNS / TIDES)' : 'block-find luck (Solo)'}. Power and CapEx are luck-invariant; revenue, pool fees, and maintenance scale with realized BTC. Top number is 5th percentile (unlucky), bottom is 95th (lucky).`)}</td>
       <td class="r sub">—</td>
       <td class="r range-cell"><span class="range-val ${(mode === 'hodl' ? hodlNetLow : sellNetLow) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetLow : sellNetLow)}</span><span class="range-val ${(mode === 'hodl' ? hodlNetHigh : sellNetHigh) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetHigh : sellNetHigh)}</span></td>
@@ -2662,8 +2738,6 @@ function syncInputsFromState() {
   $('#horizon').value = state.network.horizonMonths;
   $('#ownership-share').value = state.ownership.sharePct;
   syncCollapsibleSections();
-  const nameInp = $('#site-name-input');
-  if (nameInp) nameInp.value = site.name || '';
   syncPowerModeUI();
 }
 
@@ -2673,13 +2747,20 @@ function syncPayoutModelUI() {
 }
 
 function syncCollapsibleSections() {
-  const netOpen = !!state.ui.networkExpanded;
-  $('#network-arrow').classList.toggle('open', netOpen);
-  $('#network-body').classList.toggle('collapsed', !netOpen);
   const advOpen = !!state.ui.networkAdvancedExpanded;
   $('#network-advanced').classList.toggle('collapsed', !advOpen);
   const advBtn = $('#network-advanced-toggle');
   if (advBtn) advBtn.textContent = advOpen ? '− Hide live values' : '+ Show live values (auto-fetched)';
+  const detailOpen = !!state.ui.detailExpanded;
+  const detailArrow = $('#detail-arrow');
+  const detailBody = $('#detail-body');
+  if (detailArrow) detailArrow.classList.toggle('open', detailOpen);
+  if (detailBody) detailBody.classList.toggle('collapsed', !detailOpen);
+  const inputsOpen = state.ui.inputsExpanded !== false;
+  const inputsArrow = $('#inputs-arrow');
+  const inputsBody = $('#inputs-body');
+  if (inputsArrow) inputsArrow.classList.toggle('open', inputsOpen);
+  if (inputsBody) inputsBody.classList.toggle('collapsed', !inputsOpen);
 }
 
 function syncPowerModeUI() {
@@ -2845,7 +2926,8 @@ function exportJSON() {
       expandedMiners: state.ui.expandedMiners,
       capexExpanded: state.ui.capexExpanded,
       networkExpanded: state.ui.networkExpanded,
-      networkAdvancedExpanded: state.ui.networkAdvancedExpanded
+      networkAdvancedExpanded: state.ui.networkAdvancedExpanded,
+      detailExpanded: state.ui.detailExpanded
     },
     scenarios: state.scenarios
   };
@@ -2897,6 +2979,8 @@ function clearAllData() {
   state.ui.minersExpanded = false;
   state.ui.capexExpanded = false;
   state.ui.networkExpanded = false;
+  state.ui.detailExpanded = false;
+  state.ui.inputsExpanded = true;
   state.ui.networkAdvancedExpanded = false;
   // Reset to a fresh single default site
   state.sites = [defaultSite()];
@@ -2941,11 +3025,17 @@ function saveNow() {
 }
 
 function bindInputs() {
-  // Site switcher
-  $('#add-site-btn').addEventListener('click', () => {
-    const newSite = defaultSite('Site ' + (state.sites.length + 1));
+  // Site switcher: input is a buffer for the next site to create.
+  // Add reads it, creates the new site with that name, clears the input.
+  // Empty input falls back to a "Site N" default.
+  const addNewSite = () => {
+    const inp = $('#site-name-input');
+    const typed = (inp && inp.value || '').trim();
+    const name = typed || ('Site ' + (state.sites.length + 1));
+    const newSite = defaultSite(name);
     state.sites.push(newSite);
     state.ui.activeSiteId = newSite.id;
+    if (inp) inp.value = '';
     markDirty();
     renderSiteSwitcher();
     renderResultsSiteSelector();
@@ -2953,15 +3043,13 @@ function bindInputs() {
     renderMinerList();
     renderCapexList();
     recalcAndRender();
-    setTimeout(() => { const inp = $('#site-name-input'); if (inp) { inp.focus(); inp.select(); } }, 0);
-  });
-  $('#site-name-input').addEventListener('input', (e) => {
-    const site = activeSite();
-    if (!site) return;
-    site.name = e.target.value;
-    markDirty();
-    renderSiteSwitcher();
-    renderResultsSiteSelector();
+  };
+  $('#add-site-btn').addEventListener('click', addNewSite);
+  $('#site-name-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewSite();
+    }
   });
   $('#site-remove-btn').addEventListener('click', () => {
     if (state.sites.length <= 1) return;
@@ -3060,14 +3148,19 @@ function bindInputs() {
   });
 
   // Section collapse toggles
-  $('#network-header').addEventListener('click', () => {
-    state.ui.networkExpanded = !state.ui.networkExpanded;
-    syncCollapsibleSections();
-    markDirty();
-  });
   $('#network-advanced-toggle').addEventListener('click', (e) => {
     e.stopPropagation();
     state.ui.networkAdvancedExpanded = !state.ui.networkAdvancedExpanded;
+    syncCollapsibleSections();
+    markDirty();
+  });
+  $('#detail-header').addEventListener('click', () => {
+    state.ui.detailExpanded = !state.ui.detailExpanded;
+    syncCollapsibleSections();
+    markDirty();
+  });
+  $('#inputs-header').addEventListener('click', () => {
+    state.ui.inputsExpanded = !(state.ui.inputsExpanded !== false);
     syncCollapsibleSections();
     markDirty();
   });
@@ -3215,6 +3308,7 @@ function renderSiteSwitcher() {
     chip.type = 'button';
     chip.className = 'site-chip' + (site.id === state.ui.activeSiteId ? ' active' : '');
     chip.textContent = site.name || 'Site';
+    chip.title = 'Click to switch · double-click to rename';
     const id = site.id;
     chip.addEventListener('click', () => {
       if (state.ui.activeSiteId === id) return;
@@ -3225,13 +3319,46 @@ function renderSiteSwitcher() {
       renderCapexList();
       recalcAndRender();
     });
+    chip.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      startRenameSite(chip, id);
+    });
     chipBox.appendChild(chip);
   }
-  const nameInp = $('#site-name-input');
-  const site = activeSite();
-  if (nameInp && site) nameInp.value = site.name || '';
   const rmBtn = $('#site-remove-btn');
   if (rmBtn) rmBtn.disabled = state.sites.length <= 1;
+}
+
+function startRenameSite(chipEl, siteId) {
+  const site = state.sites.find(s => s.id === siteId);
+  if (!site) return;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'site-chip-edit';
+  input.value = site.name || '';
+  input.style.width = Math.max(80, chipEl.offsetWidth) + 'px';
+  let committed = false;
+  const finish = (save) => {
+    if (committed) return;
+    committed = true;
+    if (save) {
+      const v = input.value.trim();
+      if (v && v !== site.name) {
+        site.name = v;
+        markDirty();
+      }
+    }
+    renderSiteSwitcher();
+    renderResultsSiteSelector();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+  chipEl.replaceWith(input);
+  input.focus();
+  input.select();
 }
 
 function renderStrategySelector() {
