@@ -520,6 +520,37 @@
     </div>
   </section>
 
+  <!-- DETAIL BREAKDOWN (collapsible Results table) -->
+  <section class="section detail-section">
+    <div class="section-header collapsible" id="detail-header">
+      <span class="section-name-wrap">
+        <span class="section-arrow" id="detail-arrow">▶</span>
+        <span class="section-name">Detail breakdown</span>
+      </span>
+    </div>
+    <div class="section-body collapsed" id="detail-body">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th class="r">Per month</th>
+            <th class="r">Lifetime</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- INPUTS (collapsible) -->
+  <section class="section inputs-section">
+    <div class="section-header collapsible" id="inputs-header">
+      <span class="section-name-wrap">
+        <span class="section-arrow" id="inputs-arrow">▶</span>
+        <span class="section-name">Inputs</span>
+      </span>
+    </div>
+    <div class="section-body" id="inputs-body">
   <div class="calc-grid">
 
     <!-- OWNERSHIP -->
@@ -734,26 +765,6 @@
     </section>
 
   </div>
-
-  <!-- DETAIL BREAKDOWN (collapsible Results table) -->
-  <section class="section detail-section">
-    <div class="section-header collapsible" id="detail-header">
-      <span class="section-name-wrap">
-        <span class="section-arrow" id="detail-arrow">▶</span>
-        <span class="section-name">Detail breakdown</span>
-      </span>
-    </div>
-    <div class="section-body collapsed" id="detail-body">
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th class="r">Per month</th>
-            <th class="r">Lifetime</th>
-          </tr>
-        </thead>
-        <tbody id="results-tbody"></tbody>
-      </table>
     </div>
   </section>
 </main>
@@ -1063,7 +1074,7 @@ const state = {
     energyInflationYrPct: 0,
     horizonMonths: 36
   },
-  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false, detailExpanded:false },
+  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false, detailExpanded:false, inputsExpanded:true },
   scenarios: [],
   // Cached live data (informational only — display in ticker)
   live: {
@@ -1134,7 +1145,8 @@ function persist() {
         capexExpanded: state.ui.capexExpanded,
         networkExpanded: state.ui.networkExpanded,
         networkAdvancedExpanded: state.ui.networkAdvancedExpanded,
-        detailExpanded: state.ui.detailExpanded
+        detailExpanded: state.ui.detailExpanded,
+        inputsExpanded: state.ui.inputsExpanded
       },
       scenarios: state.scenarios
     };
@@ -1218,6 +1230,7 @@ function applySnapshotData(snap) {
     state.ui.capexExpanded = !!snap.ui.capexExpanded;
     state.ui.networkExpanded = !!snap.ui.networkExpanded;
     state.ui.detailExpanded = !!snap.ui.detailExpanded;
+    state.ui.inputsExpanded = snap.ui.inputsExpanded !== false;
     state.ui.networkAdvancedExpanded = !!snap.ui.networkAdvancedExpanded;
     if (snap.ui.activeSiteId) state.ui.activeSiteId = snap.ui.activeSiteId;
     if (snap.ui.resultsSiteId) state.ui.resultsSiteId = snap.ui.resultsSiteId;
@@ -2745,6 +2758,11 @@ function syncCollapsibleSections() {
   const detailBody = $('#detail-body');
   if (detailArrow) detailArrow.classList.toggle('open', detailOpen);
   if (detailBody) detailBody.classList.toggle('collapsed', !detailOpen);
+  const inputsOpen = state.ui.inputsExpanded !== false;
+  const inputsArrow = $('#inputs-arrow');
+  const inputsBody = $('#inputs-body');
+  if (inputsArrow) inputsArrow.classList.toggle('open', inputsOpen);
+  if (inputsBody) inputsBody.classList.toggle('collapsed', !inputsOpen);
 }
 
 function syncPowerModeUI() {
@@ -2964,6 +2982,7 @@ function clearAllData() {
   state.ui.capexExpanded = false;
   state.ui.networkExpanded = false;
   state.ui.detailExpanded = false;
+  state.ui.inputsExpanded = true;
   state.ui.networkAdvancedExpanded = false;
   // Reset to a fresh single default site
   state.sites = [defaultSite()];
@@ -3139,6 +3158,11 @@ function bindInputs() {
   });
   $('#detail-header').addEventListener('click', () => {
     state.ui.detailExpanded = !state.ui.detailExpanded;
+    syncCollapsibleSections();
+    markDirty();
+  });
+  $('#inputs-header').addEventListener('click', () => {
+    state.ui.inputsExpanded = !(state.ui.inputsExpanded !== false);
     syncCollapsibleSections();
     markDirty();
   });
