@@ -656,6 +656,12 @@
                 <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
               </div>
             </div>
+            <div class="field-group">
+              <label class="field-label">Energy inflation <span class="hint-icon" data-tip="Annual % escalator applied to both your $/kWh rate and any $/kW/mo hosting rate, compounded monthly across the projection. Applied globally because most operators run a single utility or contract structure — if you have mixed contracts (e.g. fixed-rate solar vs grid PPI+1%), enter a blended estimate.">?</span></label>
+              <div class="field-suffix long" data-suffix="%/yr">
+                <input type="number" class="field-input" id="energy-inflation" step="0.1" value="0">
+              </div>
+            </div>
           </div>
           <button class="advanced-toggle" id="network-advanced-toggle" type="button">+ Show live values (auto-fetched)</button>
           <div class="field-grid advanced collapsed" id="network-advanced">
@@ -933,6 +939,7 @@ const state = {
     nextAdjPct: 0,
     diffGrowthYrPct: 30,
     priceGrowthMoPct: 2.53,   // ~+35%/yr — Status Quo CAGR baseline (see QUICK_SCENARIOS)
+    energyInflationYrPct: 0,
     horizonMonths: 36
   },
   ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false },
@@ -1074,7 +1081,7 @@ function applySnapshotData(snap) {
 
   state.network = {
     btcPrice: 95000, difficultyT: 109.78, blockReward: 3.125, nextAdjPct: 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, horizonMonths: 36,
+    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, energyInflationYrPct: 0, horizonMonths: 36,
     ...(snap.network || {})
   };
   if (snap.ui) {
@@ -1343,6 +1350,7 @@ function project(s, siteId = null) {
   const nextAdj = (+opts.network.nextAdjPct || 0) / 100;
   const monthlyDiffMul = Math.pow(1 + (+opts.network.diffGrowthYrPct || 0) / 100, 1/12);
   const monthlyPriceMul = 1 + (+opts.network.priceGrowthMoPct || 0) / 100;
+  const monthlyEnergyMul = Math.pow(1 + (+opts.network.energyInflationYrPct || 0) / 100, 1/12);
   const horizon = Math.max(1, Math.min(120, Math.round(+opts.network.horizonMonths || 1)));
 
   // Pre-apply next-adjustment to month 1 difficulty
@@ -1358,6 +1366,8 @@ function project(s, siteId = null) {
 
   // Static per-month pieces
   const daysInMonth = 30.4375;
+  // Energy-cost escalator: month 1 uses base rates, then compounds monthly.
+  let energyFactor = 1;
 
   for (let i = 1; i <= horizon; i++) {
     if (monthsToHalving > 0 && i > monthsToHalving) reward = POST_HALVING_REWARD;
@@ -1374,10 +1384,10 @@ function project(s, siteId = null) {
       let powerCost;
       if (sp.mode === 'kwh') {
         const kwhPerMonth = (sp.watts / 1000) * 24 * sp.uptime * daysInMonth;
-        powerCost = kwhPerMonth * sp.elecRate;
+        powerCost = kwhPerMonth * sp.elecRate * energyFactor;
       } else {
         const kw = sp.watts / 1000;
-        powerCost = kw * sp.coloRate;
+        powerCost = kw * sp.coloRate * energyFactor;
       }
 
       const maintCost = grossRevenue * sp.maintPct;
@@ -1425,6 +1435,7 @@ function project(s, siteId = null) {
     // Apply growth for next month
     difficulty *= monthlyDiffMul;
     btcPrice *= monthlyPriceMul;
+    energyFactor *= monthlyEnergyMul;
   }
 
   const horizonValue = cumulative;
@@ -2326,6 +2337,7 @@ function syncInputsFromState() {
   $('#next-adj').value = +(+state.network.nextAdjPct).toFixed(2);
   $('#diff-growth').value = state.network.diffGrowthYrPct;
   $('#price-growth').value = state.network.priceGrowthMoPct;
+  $('#energy-inflation').value = state.network.energyInflationYrPct;
   $('#horizon').value = state.network.horizonMonths;
   $('#ownership-share').value = state.ownership.sharePct;
   syncCollapsibleSections();
@@ -2572,7 +2584,7 @@ function clearAllData() {
     difficultyT: state.live.difficulty || 109.78,
     blockReward: 3.125,
     nextAdjPct: state.live.nextAdjPct || 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, horizonMonths: 36
+    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, energyInflationYrPct: 0, horizonMonths: 36
   };
   syncInputsFromState();
   renderSiteSwitcher();
@@ -2694,6 +2706,7 @@ function bindInputs() {
   });
   $('#diff-growth').addEventListener('input', (e) => { state.network.diffGrowthYrPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
   $('#price-growth').addEventListener('input', (e) => { state.network.priceGrowthMoPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+  $('#energy-inflation').addEventListener('input', (e) => { state.network.energyInflationYrPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
   $('#horizon').addEventListener('input', (e) => {
     state.network.horizonMonths = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
     markDirty(); recalcAndRender();
