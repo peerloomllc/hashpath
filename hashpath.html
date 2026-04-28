@@ -607,7 +607,7 @@
         <div class="section-header">
           <span class="section-name-wrap">
             <span class="section-name">Ownership</span>
-            <span class="hint-icon" data-tip="Set to &lt;100% if you only own part of the operation. The View strip above the calculator gets a Company / My share toggle that scales Results to your slice.">?</span>
+            <span class="hint-icon" data-tip="Set to &lt;100% if you only own part of the operation. The strip above the calculator gets a Company / Individual toggle that scales Results to your slice.">?</span>
           </span>
         </div>
         <div class="section-body">
@@ -1819,7 +1819,7 @@ function renderResults(p) {
       <td class="r neg">${fmtUSD(-sharedCapex)}</td>
     </tr>
     <tr class="${sellRowCls}">
-      <td class="label">Net (sell as mined) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx. Assumes you sell each month\'s BTC at that month\'s price — the realized cash-flow model.')}</td>
+      <td class="label">Net (sell) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx. Assumes you sell each month\'s BTC at that month\'s price — the realized cash-flow model.')}</td>
       <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
       <td class="r ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}</td>
     </tr>
@@ -2888,7 +2888,7 @@ function renderStrategySelector() {
   if (!box) return;
   box.innerHTML = '';
   const items = [
-    { mode: 'sell', name: 'Sell as mined' },
+    { mode: 'sell', name: 'Sell' },
     { mode: 'hodl', name: 'HODL' }
   ];
   for (const it of items) {
@@ -2945,8 +2945,8 @@ function renderShareSelector() {
   if (sharePct >= 100) { box.innerHTML = ''; return; }
   box.innerHTML = '';
   const items = [
-    { mode: 'company', name: 'Company total' },
-    { mode: 'partner', name: 'My share — ' + (Number.isInteger(sharePct) ? sharePct : sharePct.toFixed(1)) + '%' }
+    { mode: 'company', name: 'Company' },
+    { mode: 'partner', name: 'Individual' }
   ];
   for (const it of items) {
     const chip = document.createElement('button');
