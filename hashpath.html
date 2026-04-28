@@ -103,16 +103,30 @@
   .section-total{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--accent)}
   .section-body{padding:14px 18px}
 
-  /* ── CALC GRID ── */
+  /* ── CALC GRID ──
+     Two-row layout: row 1 has Ownership / Site / CapEx (3 equal cards);
+     row 2 has Operating / Network (2 equal cards). 6-col underlying grid
+     so the row-1 columns line up cleanly even though row 2 has fewer cards.
+     align-items:stretch (default) makes cards in the same row match height. */
   .calc-grid{display:grid;gap:24px}
-  .calc-col-1{grid-area:col1}
-  .calc-col-2{grid-area:col2}
-  .calc-col-3{grid-area:col3}
+  .card-ownership{grid-area:ownership}
+  .card-site{grid-area:site}
+  .card-capex{grid-area:capex}
+  .card-operating{grid-area:operating}
+  .card-network{grid-area:network}
   @media (min-width:1100px){
-    .calc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);grid-template-areas:"col1 col2 col3";align-items:start}
+    .calc-grid{
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      grid-template-areas:
+        "ownership ownership site site capex capex"
+        "operating operating operating network network network";
+    }
   }
   @media (max-width:1099px){
-    .calc-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"col1" "col2" "col3"}
+    .calc-grid{
+      grid-template-columns:minmax(0,1fr);
+      grid-template-areas:"ownership" "site" "capex" "operating" "network";
+    }
   }
 
   /* ── DETAIL SECTION (collapsible Results table at bottom) ── */
@@ -507,235 +521,223 @@
 
   <div class="calc-grid">
 
-    <!-- COL 1: SITE + CAPEX -->
-    <div class="calc-col-1">
-      <!-- SITE SWITCHER -->
-      <section class="section site-section">
-        <div class="section-header">
-          <span class="section-name">Site</span>
-          <button class="add-site-btn" id="add-site-btn">+ Add Site</button>
-        </div>
-        <div class="section-body">
-          <div class="site-chips" id="site-chips"></div>
-          <div class="site-name-row">
-            <label class="field-label" for="site-name-input">Active site name</label>
-            <div class="site-name-input-row">
-              <input type="text" class="field-input" id="site-name-input" placeholder="Site name">
-              <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
+    <!-- OWNERSHIP -->
+    <section class="section card-ownership">
+      <div class="section-header">
+        <span class="section-name-wrap">
+          <span class="section-name">Ownership</span>
+          <span class="hint-icon" data-tip="Set to &lt;100% if you only own part of the operation. The strip above the calculator gets a Company / Individual toggle that scales Results to your slice.">?</span>
+        </span>
+      </div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field-group full">
+            <label class="field-label">Your share</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="ownership-share" min="0" max="100" step="0.1" value="100">
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- CAPEX -->
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name">CapEx</span>
-          <span class="section-total" id="hw-capex-total">$0</span>
-        </div>
-        <div class="capex-subsection miners-subsection">
-          <div class="capex-header" id="miners-header">
-            <span class="capex-toggle-arrow" id="miners-arrow">▶</span>
-            <span class="capex-label">Miners</span>
-            <span class="capex-total" id="miners-subtotal">$0</span>
-          </div>
-          <div class="capex-body" id="miners-body">
-            <div class="miners-list" id="miners-list"></div>
-            <div class="add-row" id="add-miner-row">
-              <button class="add-row-btn add-miner-trigger" id="add-miner-trigger">+ Add Miner</button>
-              <div class="add-miner-controls">
-                <select class="preset-select" id="preset-select"></select>
-                <button class="add-row-btn" id="add-custom-btn">+ Custom</button>
-                <button class="add-row-cancel" id="cancel-add-miner" title="Cancel">&#10005;</button>
-              </div>
-            </div>
+    <!-- SITE SWITCHER -->
+    <section class="section site-section card-site">
+      <div class="section-header">
+        <span class="section-name">Site</span>
+        <button class="add-site-btn" id="add-site-btn">+ Add Site</button>
+      </div>
+      <div class="section-body">
+        <div class="site-chips" id="site-chips"></div>
+        <div class="site-name-row">
+          <label class="field-label" for="site-name-input">Active site name</label>
+          <div class="site-name-input-row">
+            <input type="text" class="field-input" id="site-name-input" placeholder="Site name">
+            <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
           </div>
         </div>
-        <div class="capex-subsection">
-          <div class="capex-header" id="capex-header">
-            <span class="capex-toggle-arrow" id="capex-arrow">▶</span>
-            <span class="capex-label">Other CapEx</span>
-            <span class="capex-total" id="capex-subtotal">$0</span>
-          </div>
-          <div class="capex-body" id="capex-body">
-            <div class="capex-list" id="capex-list"></div>
-            <button class="capex-add-btn" id="capex-add-btn">+ Add CapEx</button>
-          </div>
-        </div>
-        <div class="fleet-summary">
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Hashrate</div>
-            <div class="fleet-stat-value" id="fleet-hashrate">— TH/s</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Power</div>
-            <div class="fleet-stat-value" id="fleet-power">— kW</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Efficiency</div>
-            <div class="fleet-stat-value" id="fleet-efficiency">— J/TH</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-label">Units</div>
-            <div class="fleet-stat-value" id="fleet-units">0</div>
-          </div>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
 
-    <!-- COL 2: OPERATING + OWNERSHIP + NETWORK -->
-    <div class="calc-col-2">
-      <!-- OPERATING -->
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name">Operating</span>
+    <!-- CAPEX -->
+    <section class="section card-capex">
+      <div class="section-header">
+        <span class="section-name">CapEx</span>
+        <span class="section-total" id="hw-capex-total">$0</span>
+      </div>
+      <div class="capex-subsection miners-subsection">
+        <div class="capex-header" id="miners-header">
+          <span class="capex-toggle-arrow" id="miners-arrow">▶</span>
+          <span class="capex-label">Miners</span>
+          <span class="capex-total" id="miners-subtotal">$0</span>
         </div>
-        <div class="section-body">
-          <div class="power-mode-toggle" id="power-mode-toggle">
-            <button data-mode="kwh" class="active">$/kWh (direct)</button>
-            <button data-mode="colo">$/kW/month (hosted)</button>
-          </div>
-          <div class="field-grid">
-            <div class="field-group" id="field-elec-rate-wrap">
-              <label class="field-label">Electricity rate</label>
-              <div class="field-suffix" data-suffix="$/kWh">
-                <input type="number" class="field-input" id="elec-rate" min="0" step="0.001" value="0.07">
-              </div>
-            </div>
-            <div class="field-group" id="field-colo-rate-wrap" style="display:none">
-              <label class="field-label">Hosting rate</label>
-              <div class="field-suffix long" data-suffix="$/kW/mo">
-                <input type="number" class="field-input" id="colo-rate" min="0" step="1" value="100">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Pool fee</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="pool-fee" min="0" max="100" step="0.1" value="1.5">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Payout model
-                <span class="hint-icon" data-tip="FPPS / PPS pays expected value of every share - pool absorbs all variance. PPLNS / TIDES (e.g. Ocean) is non-custodial - your payout rides the pool's block-finding luck (moderate variance, tightens over long horizons). Solo means you only get paid when YOU find a block - huge variance for typical hardware. Affects only the variance band shown next to lifetime BTC; expected values are unchanged.">?</span>
-              </label>
-              <select class="field-input" id="payout-model">
-                <option value="fpps">FPPS / PPS</option>
-                <option value="tides">PPLNS / TIDES</option>
-                <option value="solo">Solo</option>
-              </select>
-            </div>
-            <div class="field-group" id="field-pool-share-wrap" style="display:none">
-              <label class="field-label">Pool hashrate share
-                <span class="hint-icon" data-tip="The pool's share of total network hashrate. Drives how often the pool finds blocks, which sets the variance band. Default 1.5% is roughly Ocean's share; use the pool's published share if you know it.">?</span>
-              </label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="pool-network-share" min="0.001" max="100" step="0.1" value="1.5">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Uptime</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="uptime" min="0" max="100" step="0.1" value="98">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Maintenance overhead</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="maintenance" min="0" max="100" step="0.1" value="2">
-              </div>
+        <div class="capex-body" id="miners-body">
+          <div class="miners-list" id="miners-list"></div>
+          <div class="add-row" id="add-miner-row">
+            <button class="add-row-btn add-miner-trigger" id="add-miner-trigger">+ Add Miner</button>
+            <div class="add-miner-controls">
+              <select class="preset-select" id="preset-select"></select>
+              <button class="add-row-btn" id="add-custom-btn">+ Custom</button>
+              <button class="add-row-cancel" id="cancel-add-miner" title="Cancel">&#10005;</button>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+      <div class="capex-subsection">
+        <div class="capex-header" id="capex-header">
+          <span class="capex-toggle-arrow" id="capex-arrow">▶</span>
+          <span class="capex-label">Other</span>
+          <span class="capex-total" id="capex-subtotal">$0</span>
+        </div>
+        <div class="capex-body" id="capex-body">
+          <div class="capex-list" id="capex-list"></div>
+          <button class="capex-add-btn" id="capex-add-btn">+ Add CapEx</button>
+        </div>
+      </div>
+      <div class="fleet-summary">
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Hashrate</div>
+          <div class="fleet-stat-value" id="fleet-hashrate">— TH/s</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Power</div>
+          <div class="fleet-stat-value" id="fleet-power">— kW</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Efficiency</div>
+          <div class="fleet-stat-value" id="fleet-efficiency">— J/TH</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-label">Units</div>
+          <div class="fleet-stat-value" id="fleet-units">0</div>
+        </div>
+      </div>
+    </section>
 
-      <!-- OWNERSHIP -->
-      <section class="section">
-        <div class="section-header">
-          <span class="section-name-wrap">
-            <span class="section-name">Ownership</span>
-            <span class="hint-icon" data-tip="Set to &lt;100% if you only own part of the operation. The strip above the calculator gets a Company / Individual toggle that scales Results to your slice.">?</span>
-          </span>
+    <!-- OPERATING -->
+    <section class="section card-operating">
+      <div class="section-header">
+        <span class="section-name">Operating</span>
+      </div>
+      <div class="section-body">
+        <div class="power-mode-toggle" id="power-mode-toggle">
+          <button data-mode="kwh" class="active">$/kWh (direct)</button>
+          <button data-mode="colo">$/kW/month (hosted)</button>
         </div>
-        <div class="section-body">
-          <div class="field-grid">
-            <div class="field-group full">
-              <label class="field-label">Your share</label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="ownership-share" min="0" max="100" step="0.1" value="100">
-              </div>
+        <div class="field-grid">
+          <div class="field-group" id="field-elec-rate-wrap">
+            <label class="field-label">Electricity rate</label>
+            <div class="field-suffix" data-suffix="$/kWh">
+              <input type="number" class="field-input" id="elec-rate" min="0" step="0.001" value="0.07">
+            </div>
+          </div>
+          <div class="field-group" id="field-colo-rate-wrap" style="display:none">
+            <label class="field-label">Hosting rate</label>
+            <div class="field-suffix long" data-suffix="$/kW/mo">
+              <input type="number" class="field-input" id="colo-rate" min="0" step="1" value="100">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Pool fee</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="pool-fee" min="0" max="100" step="0.1" value="1.5">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Payout model
+              <span class="hint-icon" data-tip="FPPS / PPS pays expected value of every share - pool absorbs all variance. PPLNS / TIDES (e.g. Ocean) is non-custodial - your payout rides the pool's block-finding luck (moderate variance, tightens over long horizons). Solo means you only get paid when YOU find a block - huge variance for typical hardware. Affects only the variance band shown next to lifetime BTC; expected values are unchanged.">?</span>
+            </label>
+            <select class="field-input" id="payout-model">
+              <option value="fpps">FPPS / PPS</option>
+              <option value="tides">PPLNS / TIDES</option>
+              <option value="solo">Solo</option>
+            </select>
+          </div>
+          <div class="field-group" id="field-pool-share-wrap" style="display:none">
+            <label class="field-label">Pool hashrate share
+              <span class="hint-icon" data-tip="The pool's share of total network hashrate. Drives how often the pool finds blocks, which sets the variance band. Default 1.5% is roughly Ocean's share; use the pool's published share if you know it.">?</span>
+            </label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="pool-network-share" min="0.001" max="100" step="0.1" value="1.5">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Uptime</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="uptime" min="0" max="100" step="0.1" value="98">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Maintenance overhead</label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="maintenance" min="0" max="100" step="0.1" value="2">
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-    </div>
-
-    <!-- COL 3: NETWORK & MARKET -->
-    <div class="calc-col-3">
-      <section class="section">
-        <div class="section-header collapsible" id="network-header">
-          <span class="section-name-wrap">
-            <span class="section-arrow" id="network-arrow">▶</span>
-            <span class="section-name">Network & Market</span>
-          </span>
-        </div>
-        <div class="section-body collapsed" id="network-body">
-          <div class="field-grid">
-            <div class="field-group">
-              <label class="field-label">Block reward</label>
-              <div class="field-suffix" data-suffix="BTC">
-                <input type="number" class="field-input" id="block-reward" min="0" step="0.0001" value="3.125">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Time horizon</label>
-              <div class="field-suffix long" data-suffix="months">
-                <input type="number" class="field-input" id="horizon" min="1" max="120" step="1" value="36">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Long-term diff growth</label>
-              <div class="field-suffix long" data-suffix="%/yr">
-                <input type="number" class="field-input" id="diff-growth" step="0.1" value="30">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">BTC price growth</label>
-              <div class="field-suffix long" data-suffix="%/mo">
-                <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Energy inflation <span class="hint-icon" data-tip="Annual % escalator applied to both your $/kWh rate and any $/kW/mo hosting rate, compounded monthly across the projection. Applied globally because most operators run a single utility or contract structure — if you have mixed contracts (e.g. fixed-rate solar vs grid PPI+1%), enter a blended estimate.">?</span></label>
-              <div class="field-suffix long" data-suffix="%/yr">
-                <input type="number" class="field-input" id="energy-inflation" step="0.1" value="0">
-              </div>
+    <!-- NETWORK & MARKET (always expanded) -->
+    <section class="section card-network">
+      <div class="section-header">
+        <span class="section-name">Network & Market</span>
+      </div>
+      <div class="section-body" id="network-body">
+        <div class="field-grid">
+          <div class="field-group">
+            <label class="field-label">Block reward</label>
+            <div class="field-suffix" data-suffix="BTC">
+              <input type="number" class="field-input" id="block-reward" min="0" step="0.0001" value="3.125">
             </div>
           </div>
-          <button class="advanced-toggle" id="network-advanced-toggle" type="button">+ Show live values (auto-fetched)</button>
-          <div class="field-grid advanced collapsed" id="network-advanced">
-            <div class="field-group">
-              <label class="field-label">BTC price <span class="live-dot" id="dot-btc"></span></label>
-              <div class="field-suffix" data-suffix="USD">
-                <input type="number" class="field-input" id="btc-price" min="0" step="100">
-              </div>
+          <div class="field-group">
+            <label class="field-label">Time horizon</label>
+            <div class="field-suffix long" data-suffix="months">
+              <input type="number" class="field-input" id="horizon" min="1" max="120" step="1" value="36">
             </div>
-            <div class="field-group">
-              <label class="field-label">Network difficulty <span class="live-dot" id="dot-diff"></span></label>
-              <div class="field-suffix" data-suffix="T">
-                <input type="number" class="field-input" id="difficulty" min="0" step="0.01">
-              </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Long-term diff growth</label>
+            <div class="field-suffix long" data-suffix="%/yr">
+              <input type="number" class="field-input" id="diff-growth" step="0.1" value="30">
             </div>
-            <div class="field-group full">
-              <label class="field-label">Next adjustment <span class="live-dot" id="dot-adj"></span></label>
-              <div class="field-suffix" data-suffix="%">
-                <input type="number" class="field-input" id="next-adj" step="0.01" value="0">
-              </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">BTC price growth</label>
+            <div class="field-suffix long" data-suffix="%/mo">
+              <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Energy inflation <span class="hint-icon" data-tip="Annual % escalator applied to both your $/kWh rate and any $/kW/mo hosting rate, compounded monthly across the projection. Applied globally because most operators run a single utility or contract structure — if you have mixed contracts (e.g. fixed-rate solar vs grid PPI+1%), enter a blended estimate.">?</span></label>
+            <div class="field-suffix long" data-suffix="%/yr">
+              <input type="number" class="field-input" id="energy-inflation" step="0.1" value="0">
             </div>
           </div>
         </div>
-      </section>
-    </div>
+        <button class="advanced-toggle" id="network-advanced-toggle" type="button">+ Show live values (auto-fetched)</button>
+        <div class="field-grid advanced collapsed" id="network-advanced">
+          <div class="field-group">
+            <label class="field-label">BTC price <span class="live-dot" id="dot-btc"></span></label>
+            <div class="field-suffix" data-suffix="USD">
+              <input type="number" class="field-input" id="btc-price" min="0" step="100">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Network difficulty <span class="live-dot" id="dot-diff"></span></label>
+            <div class="field-suffix" data-suffix="T">
+              <input type="number" class="field-input" id="difficulty" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="field-group full">
+            <label class="field-label">Next adjustment <span class="live-dot" id="dot-adj"></span></label>
+            <div class="field-suffix" data-suffix="%">
+              <input type="number" class="field-input" id="next-adj" step="0.01" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
   </div>
 
@@ -1166,7 +1168,7 @@ function migrateSnapshot(snap) {
   // CapEx legacy
   if (!Array.isArray(out.capexItems)) {
     if (typeof out.otherCapex === 'number' && out.otherCapex > 0) {
-      out.capexItems = [{ id: 'cx-' + Math.random().toString(36).slice(2,9), name:'Other CapEx', amount: out.otherCapex }];
+      out.capexItems = [{ id: 'cx-' + Math.random().toString(36).slice(2,9), name:'Other', amount: out.otherCapex }];
     } else {
       out.capexItems = [];
     }
@@ -2743,9 +2745,6 @@ function syncPayoutModelUI() {
 }
 
 function syncCollapsibleSections() {
-  const netOpen = !!state.ui.networkExpanded;
-  $('#network-arrow').classList.toggle('open', netOpen);
-  $('#network-body').classList.toggle('collapsed', !netOpen);
   const advOpen = !!state.ui.networkAdvancedExpanded;
   $('#network-advanced').classList.toggle('collapsed', !advOpen);
   const advBtn = $('#network-advanced-toggle');
@@ -3137,11 +3136,6 @@ function bindInputs() {
   });
 
   // Section collapse toggles
-  $('#network-header').addEventListener('click', () => {
-    state.ui.networkExpanded = !state.ui.networkExpanded;
-    syncCollapsibleSections();
-    markDirty();
-  });
   $('#network-advanced-toggle').addEventListener('click', (e) => {
     e.stopPropagation();
     state.ui.networkAdvancedExpanded = !state.ui.networkAdvancedExpanded;
