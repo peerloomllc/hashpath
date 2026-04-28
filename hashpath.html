@@ -721,7 +721,7 @@
             <tr>
               <th>Metric</th>
               <th class="r">Per month</th>
-              <th class="r">Lifetime <span id="lifetime-months-th" class="sub"></span></th>
+              <th class="r">Lifetime</th>
             </tr>
           </thead>
           <tbody id="results-tbody"></tbody>
@@ -1826,8 +1826,6 @@ function renderResults(p) {
   const headline = $('#result-net-monthly');
   const sub = $('#result-net-monthly-sats');
   const headlineLabel = $('#result-label');
-  const lifetimeMonths = $('#lifetime-months-th');
-  lifetimeMonths.textContent = '(' + p.horizon + ' mo)';
 
   if (p.fleet.hashrate <= 0) {
     headline.textContent = '—';
