@@ -83,11 +83,11 @@
   .icon-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
 
   /* ── VIEW ── */
-  .view{display:none;position:relative;z-index:10;max-width:1500px;margin:0 auto;padding:296px 28px 120px}
+  .view{display:none;position:relative;max-width:1500px;margin:0 auto;padding:296px 28px 120px}
   .view.active{display:block}
 
   /* ── SECTION ── */
-  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);animation:fadeUp .4s ease both;margin-bottom:18px}
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);animation:fadeUp .4s ease backwards;margin-bottom:18px}
   .section:nth-child(2){animation-delay:.05s}
   .section:nth-child(3){animation-delay:.1s}
   .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0}
@@ -239,6 +239,8 @@
   .results-table .accent{color:var(--accent)}
   .results-table .total-row td{font-weight:500;background:rgba(247,147,26,.04);border-top:1px solid var(--border)}
   .results-table .sub{font-size:13px;color:var(--text-dim)}
+  .results-table td.range-cell{line-height:1.35}
+  .results-table td.range-cell .range-val{display:block}
   .results-table tr.group-start td{border-top:1px solid var(--border);padding-top:12px}
   .results-table tr.group-start:first-child td{border-top:none;padding-top:9px}
   .results-table td.label .hint-icon{margin-left:6px;border-color:var(--border)}
@@ -588,6 +590,24 @@
               </div>
             </div>
             <div class="field-group">
+              <label class="field-label">Payout model
+                <span class="hint-icon" data-tip="FPPS / PPS pays expected value of every share - pool absorbs all variance. PPLNS / TIDES (e.g. Ocean) is non-custodial - your payout rides the pool's block-finding luck (moderate variance, tightens over long horizons). Solo means you only get paid when YOU find a block - huge variance for typical hardware. Affects only the variance band shown next to lifetime BTC; expected values are unchanged.">?</span>
+              </label>
+              <select class="field-input" id="payout-model">
+                <option value="fpps">FPPS / PPS</option>
+                <option value="tides">PPLNS / TIDES</option>
+                <option value="solo">Solo</option>
+              </select>
+            </div>
+            <div class="field-group" id="field-pool-share-wrap" style="display:none">
+              <label class="field-label">Pool hashrate share
+                <span class="hint-icon" data-tip="The pool's share of total network hashrate. Drives how often the pool finds blocks, which sets the variance band. Default 1.5% is roughly Ocean's share; use the pool's published share if you know it.">?</span>
+              </label>
+              <div class="field-suffix" data-suffix="%">
+                <input type="number" class="field-input" id="pool-network-share" min="0.001" max="100" step="0.1" value="1.5">
+              </div>
+            </div>
+            <div class="field-group">
               <label class="field-label">Uptime</label>
               <div class="field-suffix" data-suffix="%">
                 <input type="number" class="field-input" id="uptime" min="0" max="100" step="0.1" value="98">
@@ -701,7 +721,7 @@
             <tr>
               <th>Metric</th>
               <th class="r">Per month</th>
-              <th class="r">Lifetime <span id="lifetime-months-th" class="sub"></span></th>
+              <th class="r">Lifetime</th>
             </tr>
           </thead>
           <tbody id="results-tbody"></tbody>
@@ -938,7 +958,7 @@ const state = {
   capexItems: [],      // each capex item has siteId
   sites: [],           // [{ id, name, power:{mode,elecRate,coloRate}, ops:{uptimePct,maintenancePct} }]
   customPresets: [],   // user-saved miner presets [{id, name, cost, hashrate, watts}]
-  ops:   { poolFeePct:1.5 },   // pool fee stays global
+  ops:   { poolFeePct:1.5, payoutModel:'fpps', poolNetworkSharePct:1.5 },   // pool-level settings stay global
   ownership: { sharePct:100 },
   network: {
     btcPrice: 95000,
@@ -1070,7 +1090,11 @@ function migrateSnapshot(snap) {
     out.miners = out.miners.map(m => m.siteId ? m : { ...m, siteId });
     out.capexItems = out.capexItems.map(it => it.siteId ? it : { ...it, siteId });
   }
-  out.ops = { poolFeePct: legacyOps.poolFeePct ?? 1.5 };
+  out.ops = {
+    poolFeePct: legacyOps.poolFeePct ?? 1.5,
+    payoutModel: ['fpps','tides','solo'].includes(legacyOps.payoutModel) ? legacyOps.payoutModel : 'fpps',
+    poolNetworkSharePct: isFinite(+legacyOps.poolNetworkSharePct) ? +legacyOps.poolNetworkSharePct : 1.5
+  };
   delete out.tax;
   const legacyOwn = out.ownership || {};
   let sharePct = parseFloat(legacyOwn.sharePct);
@@ -1321,6 +1345,31 @@ function fleetTotals(s = state, siteId = null) {
   return { units, hashrate, watts, capex: capex + otherCapex, otherCapex };
 }
 
+// 90% confidence interval for Poisson(lambda). Returns { lo, hi } in event-counts.
+// Normal approximation for lambda >= 30; exact CDF summation otherwise. Used to
+// derive the lifetime BTC band for TIDES (lambda = pool blocks) and Solo (lambda = your blocks).
+function poissonCI90(lambda) {
+  if (!isFinite(lambda) || lambda <= 0) return { lo: 0, hi: 0 };
+  if (lambda >= 30) {
+    const z = 1.645;
+    const sd = Math.sqrt(lambda);
+    return { lo: Math.max(0, lambda - z * sd), hi: lambda + z * sd };
+  }
+  // Exact: walk the PMF until the CDF crosses 0.05 and 0.95
+  let pmf = Math.exp(-lambda);
+  let cdf = pmf;
+  let lo = null, hi = null;
+  for (let k = 0; k < 200; k++) {
+    if (lo === null && cdf >= 0.05) lo = k;
+    if (cdf >= 0.95) { hi = k; break; }
+    pmf *= lambda / (k + 1);
+    cdf += pmf;
+  }
+  if (lo === null) lo = 0;
+  if (hi === null) hi = 200;
+  return { lo, hi };
+}
+
 // Rough months-until-halving from now. Uses live blocks-left if available, else fallback date.
 function monthsUntilHalving() {
   if (state.live.halvingDate) {
@@ -1389,6 +1438,7 @@ function project(s, siteId = null) {
   let hodlBreakevenMonth = null;
   const rows = [];
   let totals = { btc:0, revenue:0, power:0, fees:0, net:0 };
+  let totalExpectedBlocks = 0;  // for variance band
 
   // Static per-month pieces
   const daysInMonth = 30.4375;
@@ -1426,6 +1476,8 @@ function project(s, siteId = null) {
 
     const monthFees = monthPool + monthMaint;
     const monthNet = monthRevenue - monthFees - monthPower;
+
+    if (reward > 0) totalExpectedBlocks += monthBtc / reward;
 
     cumulative += monthNet;
     if (breakevenMonth === null && cumulative >= 0) breakevenMonth = i;
@@ -1477,6 +1529,38 @@ function project(s, siteId = null) {
   const hodlNet = rows.length > 0 ? rows[rows.length - 1].hodlValue : -totalCapex;
   const hodlRoi = totalCapex > 0 ? hodlNet / totalCapex : 0;
 
+  // Variance band on lifetime BTC, depends on payout model.
+  // FPPS: pool absorbs variance (band collapses to expected).
+  // TIDES: payout rides pool's block-finding luck. lambda = pool's expected blocks in horizon.
+  // Solo: you only earn when you find a block. lambda = your expected blocks.
+  const payoutModel = (opts.ops && opts.ops.payoutModel) || 'fpps';
+  const totalBlocksInHorizon = horizon * daysInMonth * 144;
+  let lifetimeBtcLow = totals.btc;
+  let lifetimeBtcHigh = totals.btc;
+  let varianceLambda = null;
+  let varianceMode = payoutModel;
+
+  if (totals.btc > 0 && totalExpectedBlocks > 0) {
+    const avgRewardPerBlock = totals.btc / totalExpectedBlocks;
+    if (payoutModel === 'tides') {
+      const poolShare = ((+opts.ops.poolNetworkSharePct) || 0) / 100;
+      const lambda = poolShare * totalBlocksInHorizon;
+      if (lambda > 0) {
+        const ci = poissonCI90(lambda);
+        const perEvent = totals.btc / lambda;  // your BTC per pool block
+        lifetimeBtcLow = ci.lo * perEvent;
+        lifetimeBtcHigh = ci.hi * perEvent;
+        varianceLambda = lambda;
+      }
+    } else if (payoutModel === 'solo') {
+      const lambda = totalExpectedBlocks;
+      const ci = poissonCI90(lambda);
+      lifetimeBtcLow = ci.lo * avgRewardPerBlock;
+      lifetimeBtcHigh = ci.hi * avgRewardPerBlock;
+      varianceLambda = lambda;
+    }
+  }
+
   return {
     rows,
     totals,
@@ -1492,7 +1576,12 @@ function project(s, siteId = null) {
     allInCostPerBtc,
     marginalCostPerBtc,
     monthsToHalving,
-    endingPrice
+    endingPrice,
+    lifetimeBtcLow,
+    lifetimeBtcHigh,
+    varianceLambda,
+    varianceMode,
+    expectedBlocks: totalExpectedBlocks
   };
 }
 
@@ -1737,8 +1826,6 @@ function renderResults(p) {
   const headline = $('#result-net-monthly');
   const sub = $('#result-net-monthly-sats');
   const headlineLabel = $('#result-label');
-  const lifetimeMonths = $('#lifetime-months-th');
-  lifetimeMonths.textContent = '(' + p.horizon + ' mo)';
 
   if (p.fleet.hashrate <= 0) {
     headline.textContent = '—';
@@ -1769,6 +1856,9 @@ function renderResults(p) {
   const totalFees = p.totals.fees * share;
   const totalNet = p.totals.net * share;
   const lifetimeBtc = p.totals.btc * share;
+  const lifetimeBtcLow = (p.lifetimeBtcLow ?? p.totals.btc) * share;
+  const lifetimeBtcHigh = (p.lifetimeBtcHigh ?? p.totals.btc) * share;
+  const varianceMode = p.varianceMode || 'fpps';
   const sharedCapex = p.capex * share;
   const lifetimeProfit = p.horizonProfit * share;
 
@@ -1777,6 +1867,17 @@ function renderResults(p) {
   const avgRealizedPrice = lifetimeBtc > 0 ? totalRevenue / lifetimeBtc : 0;
   const stashAtHorizon = lifetimeBtc * endingPrice;
   const hodlNet = stashAtHorizon - totalPower - totalFees - sharedCapex;
+
+  // Variance band on USD net. Power and CapEx are luck-invariant; revenue + fees
+  // (pool + maintenance) scale linearly with realized BTC, so we propagate the
+  // BTC band by ratio. Hidden when payout model is FPPS (band collapses).
+  const ratioLow = lifetimeBtc > 0 ? lifetimeBtcLow / lifetimeBtc : 1;
+  const ratioHigh = lifetimeBtc > 0 ? lifetimeBtcHigh / lifetimeBtc : 1;
+  const sellNetLow = (totalRevenue - totalFees) * ratioLow - totalPower - sharedCapex;
+  const sellNetHigh = (totalRevenue - totalFees) * ratioHigh - totalPower - sharedCapex;
+  const hodlNetLow = (stashAtHorizon - totalFees) * ratioLow - totalPower - sharedCapex;
+  const hodlNetHigh = (stashAtHorizon - totalFees) * ratioHigh - totalPower - sharedCapex;
+  const showVarianceRow = varianceMode !== 'fpps' && lifetimeBtc > 0 && (lifetimeBtcHigh - lifetimeBtcLow) > 0;
 
   // Headline + section total per active strategy
   if (mode === 'hodl') {
@@ -1870,6 +1971,11 @@ function renderResults(p) {
       <td class="r sub">—</td>
       <td class="r ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}</td>
     </tr>
+    ${showVarianceRow ? `<tr class="group-start">
+      <td class="label">90% range ${tip(`Range of ${mode === 'hodl' ? 'Net (HODL)' : 'Net (sell)'} outcomes attributable to ${varianceMode === 'tides' ? 'pool block-finding luck (PPLNS / TIDES)' : 'block-find luck (Solo)'}. Power and CapEx are luck-invariant; revenue, pool fees, and maintenance scale with realized BTC. Top number is 5th percentile (unlucky), bottom is 95th (lucky).`)}</td>
+      <td class="r sub">—</td>
+      <td class="r range-cell"><span class="range-val ${(mode === 'hodl' ? hodlNetLow : sellNetLow) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetLow : sellNetLow)}</span><span class="range-val ${(mode === 'hodl' ? hodlNetHigh : sellNetHigh) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetHigh : sellNetHigh)}</span></td>
+    </tr>` : ''}
   `;
 }
 
@@ -2473,6 +2579,9 @@ function syncInputsFromState() {
   $('#elec-rate').value = site.power.elecRate;
   $('#colo-rate').value = site.power.coloRate;
   $('#pool-fee').value = state.ops.poolFeePct;
+  $('#payout-model').value = state.ops.payoutModel || 'fpps';
+  $('#pool-network-share').value = state.ops.poolNetworkSharePct ?? 1.5;
+  syncPayoutModelUI();
   $('#uptime').value = site.ops.uptimePct;
   $('#maintenance').value = site.ops.maintenancePct;
   $('#btc-price').value = Math.round(state.network.btcPrice);
@@ -2488,6 +2597,11 @@ function syncInputsFromState() {
   const nameInp = $('#site-name-input');
   if (nameInp) nameInp.value = site.name || '';
   syncPowerModeUI();
+}
+
+function syncPayoutModelUI() {
+  const wrap = $('#field-pool-share-wrap');
+  if (wrap) wrap.style.display = state.ops.payoutModel === 'tides' ? '' : 'none';
 }
 
 function syncCollapsibleSections() {
@@ -2719,7 +2833,7 @@ function clearAllData() {
   state.sites = [defaultSite()];
   state.ui.activeSiteId = state.sites[0].id;
   state.ui.resultsSiteId = 'all';
-  state.ops = { poolFeePct:1.5 };
+  state.ops = { poolFeePct:1.5, payoutModel:'fpps', poolNetworkSharePct:1.5 };
   state.ownership = { sharePct:100 };
   state.ui.resultsViewMode = 'company';
   state.ui.strategyMode = 'sell';
@@ -2823,8 +2937,18 @@ function bindInputs() {
     markDirty(); recalcAndRender();
   });
 
-  // Ops (pool fee global; uptime + maintenance per active site)
+  // Ops (pool fee + payout model + pool share global; uptime + maintenance per active site)
   $('#pool-fee').addEventListener('input', (e) => { state.ops.poolFeePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+  $('#payout-model').addEventListener('change', (e) => {
+    const v = e.target.value;
+    state.ops.payoutModel = ['fpps','tides','solo'].includes(v) ? v : 'fpps';
+    syncPayoutModelUI();
+    markDirty(); recalcAndRender();
+  });
+  $('#pool-network-share').addEventListener('input', (e) => {
+    state.ops.poolNetworkSharePct = parseFloat(e.target.value) || 0;
+    markDirty(); recalcAndRender();
+  });
   $('#uptime').addEventListener('input', (e) => { activeSite().ops.uptimePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
   $('#maintenance').addEventListener('input', (e) => { activeSite().ops.maintenancePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
 
