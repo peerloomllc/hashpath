@@ -247,10 +247,10 @@
 
   /* ── FLEET SUMMARY ── */
   .fleet-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--border);background:var(--surface2)}
-  .fleet-stat{padding:10px 14px;border-right:1px solid var(--border);text-align:center}
+  .fleet-stat{padding:10px 8px;border-right:1px solid var(--border);text-align:center;min-width:0}
   .fleet-stat:last-child{border-right:none}
-  .fleet-stat-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
-  .fleet-stat-value{font-family:var(--mono);font-size:15px;color:var(--text);margin-top:2px}
+  .fleet-stat-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);white-space:nowrap}
+  .fleet-stat-value{font-family:var(--mono);font-size:14px;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* ── CHARTS ── */
   .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
@@ -526,7 +526,7 @@
         <div class="capex-subsection">
           <div class="capex-header" id="capex-header">
             <span class="capex-toggle-arrow" id="capex-arrow">▶</span>
-            <span class="capex-label">Other CapEx (racks, install, infra)</span>
+            <span class="capex-label">Other CapEx</span>
             <span class="capex-total" id="capex-subtotal">$0</span>
           </div>
           <div class="capex-body" id="capex-body">
