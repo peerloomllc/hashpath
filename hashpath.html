@@ -239,8 +239,8 @@
   .results-table .accent{color:var(--accent)}
   .results-table .total-row td{font-weight:500;background:rgba(247,147,26,.04);border-top:1px solid var(--border)}
   .results-table .sub{font-size:13px;color:var(--text-dim)}
-  .results-table td.range-cell{white-space:normal;line-height:1.4}
-  .results-table td.range-cell .range-sep{color:var(--text-dim);margin:0 4px}
+  .results-table td.range-cell{line-height:1.35}
+  .results-table td.range-cell .range-val{display:block}
   .results-table tr.group-start td{border-top:1px solid var(--border);padding-top:12px}
   .results-table tr.group-start:first-child td{border-top:none;padding-top:9px}
   .results-table td.label .hint-icon{margin-left:6px;border-color:var(--border)}
@@ -1974,9 +1974,9 @@ function renderResults(p) {
       <td class="r ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}</td>
     </tr>
     ${showVarianceRow ? `<tr class="group-start">
-      <td class="label">${mode === 'hodl' ? 'Net (HODL)' : 'Net (sell)'}, 90% range ${tip(`Range of net outcomes attributable to ${varianceMode === 'tides' ? 'pool block-finding luck (PPLNS / TIDES)' : 'block-find luck (Solo)'}. Power and CapEx are luck-invariant; revenue, pool fees, and maintenance scale with realized BTC. 5th to 95th percentile.`)}</td>
+      <td class="label">90% range ${tip(`Range of ${mode === 'hodl' ? 'Net (HODL)' : 'Net (sell)'} outcomes attributable to ${varianceMode === 'tides' ? 'pool block-finding luck (PPLNS / TIDES)' : 'block-find luck (Solo)'}. Power and CapEx are luck-invariant; revenue, pool fees, and maintenance scale with realized BTC. Top number is 5th percentile (unlucky), bottom is 95th (lucky).`)}</td>
       <td class="r sub">—</td>
-      <td class="r range-cell"><span class="${(mode === 'hodl' ? hodlNetLow : sellNetLow) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetLow : sellNetLow)}</span><span class="range-sep">to</span><span class="${(mode === 'hodl' ? hodlNetHigh : sellNetHigh) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetHigh : sellNetHigh)}</span></td>
+      <td class="r range-cell"><span class="range-val ${(mode === 'hodl' ? hodlNetLow : sellNetLow) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetLow : sellNetLow)}</span><span class="range-val ${(mode === 'hodl' ? hodlNetHigh : sellNetHigh) >= 0 ? 'pos' : 'neg'}">${fmtUSD(mode === 'hodl' ? hodlNetHigh : sellNetHigh)}</span></td>
     </tr>` : ''}
   `;
 }
