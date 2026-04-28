@@ -543,7 +543,7 @@
       </div>
       <div class="section-body">
         <div class="site-toolbar">
-          <input type="text" class="field-input" id="site-name-input" placeholder="Active site name">
+          <input type="text" class="field-input" id="site-name-input" placeholder="New site name">
           <button class="add-site-btn" id="add-site-btn" title="Add a new site">+ Add</button>
           <button class="site-remove-btn" id="site-remove-btn" title="Remove this site">&#10005; Remove</button>
         </div>
@@ -2726,8 +2726,6 @@ function syncInputsFromState() {
   $('#horizon').value = state.network.horizonMonths;
   $('#ownership-share').value = state.ownership.sharePct;
   syncCollapsibleSections();
-  const nameInp = $('#site-name-input');
-  if (nameInp) nameInp.value = site.name || '';
   syncPowerModeUI();
 }
 
@@ -3009,11 +3007,17 @@ function saveNow() {
 }
 
 function bindInputs() {
-  // Site switcher
-  $('#add-site-btn').addEventListener('click', () => {
-    const newSite = defaultSite('Site ' + (state.sites.length + 1));
+  // Site switcher: input is a buffer for the next site to create.
+  // Add reads it, creates the new site with that name, clears the input.
+  // Empty input falls back to a "Site N" default.
+  const addNewSite = () => {
+    const inp = $('#site-name-input');
+    const typed = (inp && inp.value || '').trim();
+    const name = typed || ('Site ' + (state.sites.length + 1));
+    const newSite = defaultSite(name);
     state.sites.push(newSite);
     state.ui.activeSiteId = newSite.id;
+    if (inp) inp.value = '';
     markDirty();
     renderSiteSwitcher();
     renderResultsSiteSelector();
@@ -3021,15 +3025,13 @@ function bindInputs() {
     renderMinerList();
     renderCapexList();
     recalcAndRender();
-    setTimeout(() => { const inp = $('#site-name-input'); if (inp) { inp.focus(); inp.select(); } }, 0);
-  });
-  $('#site-name-input').addEventListener('input', (e) => {
-    const site = activeSite();
-    if (!site) return;
-    site.name = e.target.value;
-    markDirty();
-    renderSiteSwitcher();
-    renderResultsSiteSelector();
+  };
+  $('#add-site-btn').addEventListener('click', addNewSite);
+  $('#site-name-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewSite();
+    }
   });
   $('#site-remove-btn').addEventListener('click', () => {
     if (state.sites.length <= 1) return;
