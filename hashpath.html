@@ -183,6 +183,7 @@
   .site-chip{font-family:var(--mono);font-size:13px;letter-spacing:.5px;padding:6px 12px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text-muted);cursor:pointer;transition:all .15s}
   .site-chip:hover{color:var(--text);border-color:var(--border-light)}
   .site-chip.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent-dim)}
+  .site-chip-edit{font-family:var(--mono);font-size:13px;letter-spacing:.5px;padding:6px 12px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);color:var(--text);outline:none;width:auto;min-width:6em;box-sizing:border-box;height:auto}
   .site-toolbar{display:flex;gap:8px;align-items:center}
   .site-toolbar .field-input{flex:1;min-width:0}
   .add-site-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:13px;letter-spacing:1px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;height:34px}
@@ -3285,6 +3286,7 @@ function renderSiteSwitcher() {
     chip.type = 'button';
     chip.className = 'site-chip' + (site.id === state.ui.activeSiteId ? ' active' : '');
     chip.textContent = site.name || 'Site';
+    chip.title = 'Click to switch · double-click to rename';
     const id = site.id;
     chip.addEventListener('click', () => {
       if (state.ui.activeSiteId === id) return;
@@ -3295,13 +3297,46 @@ function renderSiteSwitcher() {
       renderCapexList();
       recalcAndRender();
     });
+    chip.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      startRenameSite(chip, id);
+    });
     chipBox.appendChild(chip);
   }
-  const nameInp = $('#site-name-input');
-  const site = activeSite();
-  if (nameInp && site) nameInp.value = site.name || '';
   const rmBtn = $('#site-remove-btn');
   if (rmBtn) rmBtn.disabled = state.sites.length <= 1;
+}
+
+function startRenameSite(chipEl, siteId) {
+  const site = state.sites.find(s => s.id === siteId);
+  if (!site) return;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'site-chip-edit';
+  input.value = site.name || '';
+  input.style.width = Math.max(80, chipEl.offsetWidth) + 'px';
+  let committed = false;
+  const finish = (save) => {
+    if (committed) return;
+    committed = true;
+    if (save) {
+      const v = input.value.trim();
+      if (v && v !== site.name) {
+        site.name = v;
+        markDirty();
+      }
+    }
+    renderSiteSwitcher();
+    renderResultsSiteSelector();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+  chipEl.replaceWith(input);
+  input.focus();
+  input.select();
 }
 
 function renderStrategySelector() {
