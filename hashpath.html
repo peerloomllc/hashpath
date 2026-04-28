@@ -51,7 +51,8 @@
   .ticker-sep{color:var(--text-dim)}
 
   /* ── HEADER ── */
-  header{position:fixed;top:38px;left:0;right:0;z-index:50;border-bottom:1px solid var(--border);padding:20px 40px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);min-height:64px;box-sizing:border-box}
+  header{position:fixed;top:38px;left:0;right:0;z-index:50;border-bottom:1px solid var(--border);padding:20px 40px 18px;display:flex;align-items:center;justify-content:center;background:var(--bg);min-height:64px;box-sizing:border-box}
+  .header-left{text-align:center}
   .header-left h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing:-.5px;line-height:1}
   .header-left h1 span{color:var(--accent);font-style:italic}
   .header-left .subtitle{margin-top:4px;font-family:var(--mono);font-size:13px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
@@ -70,6 +71,7 @@
   .kpi-tile-sub{font-family:var(--mono);font-size:12px;color:var(--text-dim);min-height:14px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kpi-tile.primary{border-color:var(--accent-dim);grid-column:span 2}
   .kpi-tile.primary .kpi-tile-value{font-family:var(--serif);font-size:42px;color:var(--accent);text-shadow:0 0 30px rgba(247,147,26,.25);letter-spacing:-.5px;line-height:1.05;white-space:normal}
+  .kpi-tile.primary .kpi-tile-value.green{color:var(--green);text-shadow:0 0 30px rgba(168,208,141,.3)}
   .kpi-tile.primary .kpi-tile-value.red{color:var(--red);text-shadow:0 0 30px rgba(224,112,112,.25)}
   .kpi-tile.primary .kpi-tile-value.range{font-size:24px;line-height:1.25}
   @media (min-width:1100px){
@@ -97,7 +99,7 @@
   .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);animation:fadeUp .4s ease backwards;margin-bottom:18px}
   .section:nth-child(2){animation-delay:.05s}
   .section:nth-child(3){animation-delay:.1s}
-  .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0}
+  .section-header{display:flex;align-items:center;justify-content:center;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0}
   .section:has(.section-body.collapsed) .section-header{border-bottom:none;border-radius:calc(var(--radius) - 1px)}
   .section-name{font-family:var(--mono);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted)}
   .section-total{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--accent)}
@@ -556,7 +558,6 @@
     <section class="section card-capex">
       <div class="section-header">
         <span class="section-name">CapEx</span>
-        <span class="section-total" id="hw-capex-total">$0</span>
       </div>
       <div class="capex-subsection miners-subsection">
         <div class="capex-header" id="miners-header">
@@ -1908,7 +1909,6 @@ function updateMinerSummary(id) {
 }
 
 function renderHardwareSummary(p) {
-  $('#hw-capex-total').textContent = fmtUSD(p.capex);
   $('#fleet-hashrate').textContent = fmtNum(p.fleet.hashrate, 1) + ' TH/s';
   $('#fleet-power').textContent = fmtNum(p.fleet.watts/1000, 2) + ' kW';
   $('#fleet-efficiency').textContent = p.fleet.efficiency != null ? p.fleet.efficiency.toFixed(1) + ' J/TH' : '—';
@@ -1993,14 +1993,14 @@ function renderResults(p) {
   // Net (primary tile) - active strategy drives label, value, and sub
   if (mode === 'hodl') {
     $('#kpi-net-label').textContent = 'Net Wealth @ Horizon';
-    setKpi('kpi-net', fmtUSD(hodlNet), hodlNet < 0 ? 'red' : 'accent');
+    setKpi('kpi-net', fmtUSD(hodlNet), hodlNet < 0 ? 'red' : 'green');
     setKpiSub('kpi-net-sub',
       stashAtHorizon > 0
         ? `BTC stash ${fmtUSD(stashAtHorizon)} at month-${p.horizon} price (${fmtUSD(endingPrice)})`
         : '');
   } else {
     $('#kpi-net-label').textContent = 'Net Profit (Lifetime)';
-    setKpi('kpi-net', fmtUSD(lifetimeProfit), lifetimeProfit < 0 ? 'red' : 'accent');
+    setKpi('kpi-net', fmtUSD(lifetimeProfit), lifetimeProfit < 0 ? 'red' : 'green');
     const monthSats = m1Net > 0 && state.network.btcPrice > 0
       ? Math.round((m1Net / state.network.btcPrice) * 1e8)
       : 0;
@@ -2023,7 +2023,7 @@ function renderResults(p) {
   setKpi('kpi-roi', fmtPct(roi), roi < 0 ? 'red' : 'gold');
   setKpiSub('kpi-roi-sub', `over ${p.horizon} mo`);
 
-  setKpi('kpi-cost-per-btc', isFinite(p.allInCostPerBtc) ? fmtUSD(p.allInCostPerBtc) : '—', 'accent');
+  setKpi('kpi-cost-per-btc', isFinite(p.allInCostPerBtc) ? fmtUSD(p.allInCostPerBtc) : '—', 'green');
   setKpiSub('kpi-cost-per-btc-sub',
     isFinite(p.marginalCostPerBtc) ? `marginal ${fmtUSD(p.marginalCostPerBtc)}` : '');
 
@@ -2031,7 +2031,7 @@ function renderResults(p) {
   setKpi('kpi-btc', fmtBTC(lifetimeBtc, 4), 'accent');
   setKpiSub('kpi-btc-sub', `${fmtBTC(m1Btc, 5)} / mo (m1)`);
 
-  setKpi('kpi-stash', fmtUSD(stashAtHorizon), 'accent');
+  setKpi('kpi-stash', fmtUSD(stashAtHorizon), 'green');
   setKpiSub('kpi-stash-sub', endingPrice > 0 ? `at ${fmtUSD(endingPrice)}/btc (m${p.horizon})` : '');
 
   // Aux tile: 90% range when payout model is non-FPPS, otherwise total CapEx
@@ -2048,7 +2048,7 @@ function renderResults(p) {
     auxEl.classList.remove('range');
     $('#kpi-aux-label').textContent = 'Total CapEx';
     auxEl.innerHTML = '';
-    setKpi('kpi-aux', fmtUSD(sharedCapex), 'accent');
+    setKpi('kpi-aux', fmtUSD(sharedCapex), 'green');
     setKpiSub('kpi-aux-sub', `${p.fleet.units} unit${p.fleet.units === 1 ? '' : 's'}`);
   }
 
@@ -2066,8 +2066,8 @@ function renderResults(p) {
     </tr>
     <tr>
       <td class="label">Gross revenue ${tip(grossRevTip)}</td>
-      <td class="r">${fmtUSD(m1Revenue)}</td>
-      <td class="r">${fmtUSD(totalRevenue)}</td>
+      <td class="r ${m1Revenue>0?'pos':''}">${fmtUSD(m1Revenue)}</td>
+      <td class="r ${totalRevenue>0?'pos':''}">${fmtUSD(totalRevenue)}</td>
     </tr>
     <tr class="group-start">
       <td class="label">Power cost ${tip('Either kWh × electricity rate, or kW × hosting rate per month, scaled by uptime %.')}</td>
@@ -2097,7 +2097,7 @@ function renderResults(p) {
     <tr class="group-start">
       <td class="label">BTC stash @ horizon ${tip(`Lifetime BTC × month-${p.horizon} BTC price (${fmtUSD(endingPrice)}). Mark-to-market value if you hold every BTC mined and sell at the horizon.`)}</td>
       <td class="r sub">—</td>
-      <td class="r accent">${fmtUSD(stashAtHorizon)}</td>
+      <td class="r ${stashAtHorizon>0?'pos':''}">${fmtUSD(stashAtHorizon)}</td>
     </tr>
     <tr class="${hodlRowCls}">
       <td class="label">Net (HODL) ${tip('BTC stash @ horizon − power − pool/maintenance − CapEx. Assumes you never sell mined BTC and pay all USD costs from external reserves; sell once at the horizon price.')}</td>
