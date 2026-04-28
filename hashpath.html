@@ -172,22 +172,22 @@
   .site-remove-btn:disabled{opacity:.4;cursor:not-allowed}
   .site-remove-btn:disabled:hover{color:var(--text-dim);border-color:var(--border)}
 
-  /* ── RESULTS SITE STRIP (fixed, persistent across tabs) ── */
-  .results-site-strip{position:fixed;top:283px;left:0;right:0;z-index:50;display:none;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
-  body.multisite .results-site-strip,
-  body.partial-share .results-site-strip{display:flex}
-  body.multisite .view,
-  body.partial-share .view{padding-top:336px}
+  /* ── RESULTS STRIP (fixed, persistent across tabs) ── */
+  .results-site-strip{position:fixed;top:283px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
+  .view{padding-top:336px}
   .results-site-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
   .results-site-chips{display:flex;flex-wrap:wrap;gap:5px}
   .results-site-chip{font-family:var(--mono);font-size:12px;letter-spacing:.5px;padding:3px 10px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text-muted);cursor:pointer;transition:all .15s}
   .results-site-chip:hover{color:var(--text);border-color:var(--border-light)}
   .results-site-chip.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent-dim)}
   .results-strip-group{display:none;align-items:center;gap:10px}
+  .results-strip-group.strategy{display:flex}
   body.multisite .results-strip-group.sites{display:flex}
   body.partial-share .results-strip-group.share{display:flex}
   .results-strip-sep{display:none;color:var(--text-dim);font-family:var(--mono);font-size:12px}
-  body.multisite.partial-share .results-strip-sep{display:inline}
+  body.multisite .sep-after-strategy{display:inline}
+  body.multisite.partial-share .sep-after-sites,
+  body.partial-share:not(.multisite) .sep-after-strategy{display:inline}
 
   /* ── MINER LIST ── */
   .miner-row{border-bottom:1px solid var(--border);transition:background .1s}
@@ -389,6 +389,7 @@
     .s-value{font-size:18px}
     .tab-nav{position:static;padding:0 12px;flex-wrap:wrap}
     .tab-btn{font-size:13px;padding:11px 12px}
+    .results-site-strip{position:static}
     .view{padding:24px 14px 60px}
     .calc-grid{gap:14px}
     .miner-fields{grid-template-columns:1fr 1fr;padding-left:18px}
@@ -427,7 +428,7 @@
     <div class="subtitle">Bitcoin Mining Profitability</div>
   </div>
   <div class="header-right">
-    <div class="result-label">Net Profit / Month</div>
+    <div class="result-label" id="result-label">Net Profit / Month</div>
     <div class="result-value" id="result-net-monthly">—</div>
     <div class="result-sub" id="result-net-monthly-sats">—</div>
   </div>
@@ -456,13 +457,18 @@
   <button class="tab-btn" data-tab="scenarios">Scenarios</button>
 </nav>
 
-<!-- RESULTS SITE STRIP (visible when 2+ sites) -->
+<!-- RESULTS STRIP -->
 <div class="results-site-strip" id="results-site-strip">
+  <div class="results-strip-group strategy">
+    <span class="results-site-label">Strategy:</span>
+    <div class="results-site-chips" id="results-strategy-chips"></div>
+  </div>
+  <span class="results-strip-sep sep-after-strategy">·</span>
   <div class="results-strip-group sites">
     <span class="results-site-label">View:</span>
     <div class="results-site-chips" id="results-site-chips"></div>
   </div>
-  <span class="results-strip-sep">·</span>
+  <span class="results-strip-sep sep-after-sites">·</span>
   <div class="results-strip-group share">
     <span class="results-site-label">Share:</span>
     <div class="results-site-chips" id="results-share-chips"></div>
@@ -713,21 +719,21 @@
     <div class="chart-card">
       <div class="chart-card-header">
         <div class="chart-card-title">Sensitivity: BTC price</div>
-        <div class="chart-card-sub">Lifetime net profit vs. BTC price (held flat)</div>
+        <div class="chart-card-sub" id="chart-sens-price-sub">Lifetime net profit vs. BTC price (held flat)</div>
       </div>
       <div class="chart-body"><canvas id="chart-sens-price"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-card-header">
         <div class="chart-card-title">Sensitivity: difficulty growth</div>
-        <div class="chart-card-sub">Lifetime net profit vs. annual difficulty growth %</div>
+        <div class="chart-card-sub" id="chart-sens-diff-sub">Lifetime net profit vs. annual difficulty growth %</div>
       </div>
       <div class="chart-body"><canvas id="chart-sens-diff"></canvas></div>
     </div>
     <div class="chart-card wide">
       <div class="chart-card-header">
         <div class="chart-card-title">Sensitivity: power cost</div>
-        <div class="chart-card-sub">Lifetime net profit vs. electricity rate $/kWh</div>
+        <div class="chart-card-sub" id="chart-sens-power-sub">Lifetime net profit vs. electricity rate $/kWh</div>
       </div>
       <div class="chart-body"><canvas id="chart-sens-power"></canvas></div>
     </div>
@@ -929,7 +935,7 @@ const state = {
     priceGrowthMoPct: 2.53,   // ~+35%/yr — Status Quo CAGR baseline (see QUICK_SCENARIOS)
     horizonMonths: 36
   },
-  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false },
+  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false },
   scenarios: [],
   // Cached live data (informational only — display in ticker)
   live: {
@@ -993,6 +999,7 @@ function persist() {
         activeSiteId: state.ui.activeSiteId,
         resultsSiteId: state.ui.resultsSiteId,
         resultsViewMode: state.ui.resultsViewMode,
+        strategyMode: state.ui.strategyMode,
         expandedMiners: state.ui.expandedMiners,
         minersExpanded: state.ui.minersExpanded,
         capexExpanded: state.ui.capexExpanded,
@@ -1081,6 +1088,9 @@ function applySnapshotData(snap) {
     if (snap.ui.resultsSiteId) state.ui.resultsSiteId = snap.ui.resultsSiteId;
     if (snap.ui.resultsViewMode === 'partner' || snap.ui.resultsViewMode === 'company') {
       state.ui.resultsViewMode = snap.ui.resultsViewMode;
+    }
+    if (snap.ui.strategyMode === 'hodl' || snap.ui.strategyMode === 'sell') {
+      state.ui.strategyMode = snap.ui.strategyMode;
     }
   }
   // Migrate scenario snapshots so legacy ones project correctly
@@ -1342,6 +1352,7 @@ function project(s, siteId = null) {
 
   let cumulative = -totalCapex;
   let breakevenMonth = null;
+  let hodlBreakevenMonth = null;
   const rows = [];
   let totals = { btc:0, revenue:0, power:0, fees:0, net:0 };
 
@@ -1389,6 +1400,13 @@ function project(s, siteId = null) {
     totals.fees += monthFees;
     totals.net += monthNet;
 
+    // HODL trajectory: mark cumulative BTC stash to end-of-month price, subtract
+    // cumulative USD outflows. Assumes the miner pays power + fees from external
+    // reserves and never sells until the chosen month.
+    const endOfMonthPrice = btcPrice * monthlyPriceMul;
+    const hodlValue = totals.btc * endOfMonthPrice - totals.power - totals.fees - totalCapex;
+    if (hodlBreakevenMonth === null && hodlValue >= 0) hodlBreakevenMonth = i;
+
     rows.push({
       month: i,
       btcMined: monthBtc,
@@ -1400,7 +1418,8 @@ function project(s, siteId = null) {
       poolPaid: monthPool,
       maintCost: monthMaint,
       netProfit: monthNet,
-      cumulative
+      cumulative,
+      hodlValue
     });
 
     // Apply growth for next month
@@ -1418,6 +1437,8 @@ function project(s, siteId = null) {
   // HODL valuation: assumes every BTC mined is held and marked-to-market here.
   const initialPrice = +opts.network.btcPrice || 0;
   const endingPrice = initialPrice * Math.pow(monthlyPriceMul, horizon);
+  const hodlNet = rows.length > 0 ? rows[rows.length - 1].hodlValue : -totalCapex;
+  const hodlRoi = totalCapex > 0 ? hodlNet / totalCapex : 0;
 
   return {
     rows,
@@ -1426,8 +1447,11 @@ function project(s, siteId = null) {
     horizon,
     fleet: { units, hashrate: ths, watts: totalW, efficiency: ths > 0 ? totalW / ths : null },
     breakevenMonth,
+    hodlBreakevenMonth,
     horizonProfit: lifetimeProfit,
+    hodlNet,
     roi,
+    hodlRoi,
     allInCostPerBtc,
     marginalCostPerBtc,
     monthsToHalving,
@@ -1672,15 +1696,17 @@ function renderHardwareSummary(p) {
 }
 
 function renderResults(p) {
-  // Headline
+  const mode = state.ui.strategyMode === 'hodl' ? 'hodl' : 'sell';
   const headline = $('#result-net-monthly');
   const sub = $('#result-net-monthly-sats');
+  const headlineLabel = $('#result-label');
   const lifetimeMonths = $('#lifetime-months-th');
   lifetimeMonths.textContent = '(' + p.horizon + ' mo)';
 
   if (p.fleet.hashrate <= 0) {
     headline.textContent = '—';
     headline.className = 'result-value';
+    if (headlineLabel) headlineLabel.textContent = mode === 'hodl' ? 'Net Wealth @ Horizon' : 'Net Profit / Month';
     sub.textContent = 'Add at least one miner to start';
     $('#kpi-breakeven').textContent = '—';
     $('#kpi-breakeven').className = 's-value breakeven';
@@ -1693,34 +1719,6 @@ function renderResults(p) {
   }
 
   const share = viewShareFactor();
-  // Use month 1 as the "current" monthly net
-  const month1 = p.rows[0];
-  const m1NetShare = month1.netProfit * share;
-  headline.textContent = fmtUSD(m1NetShare);
-  headline.className = 'result-value' + (m1NetShare < 0 ? ' negative' : '');
-  const monthSats = m1NetShare > 0 && state.network.btcPrice > 0
-    ? Math.round((m1NetShare / state.network.btcPrice) * 1e8)
-    : 0;
-  sub.textContent = m1NetShare > 0
-    ? 'profit ≈ ' + monthSats.toLocaleString('en-US') + ' sats / mo at today\'s price'
-    : (m1NetShare < 0 ? 'unprofitable at month 1' : '—');
-
-  // KPIs (break-even and ROI are share-invariant — they're about the operation)
-  const kBe = $('#kpi-breakeven');
-  if (p.breakevenMonth == null) {
-    kBe.textContent = 'Never';
-    kBe.className = 's-value breakeven never';
-  } else {
-    kBe.textContent = p.breakevenMonth + ' mo';
-    kBe.className = 's-value breakeven';
-  }
-
-  const kRoi = $('#kpi-roi');
-  kRoi.textContent = fmtPct(p.roi);
-  kRoi.className = 's-value roi' + (p.roi < 0 ? ' negative' : '');
-
-  $('#kpi-cost-per-btc').textContent = isFinite(p.allInCostPerBtc) ? fmtUSD(p.allInCostPerBtc) : '—';
-  $('#results-headline').textContent = fmtUSD(p.horizonProfit * share);
 
   // Per-month and lifetime totals (scaled by ownership share)
   const m1 = p.rows[0];
@@ -1743,9 +1741,52 @@ function renderResults(p) {
   const stashAtHorizon = lifetimeBtc * endingPrice;
   const hodlNet = stashAtHorizon - totalPower - totalFees - sharedCapex;
 
+  // Headline + section total per active strategy
+  if (mode === 'hodl') {
+    if (headlineLabel) headlineLabel.textContent = 'Net Wealth @ Horizon';
+    headline.textContent = fmtUSD(hodlNet);
+    headline.className = 'result-value' + (hodlNet < 0 ? ' negative' : '');
+    sub.textContent = stashAtHorizon > 0
+      ? 'BTC stash worth ' + fmtUSD(stashAtHorizon) + ' at month-' + p.horizon + ' price (' + fmtUSD(endingPrice) + ')'
+      : '—';
+    $('#results-headline').textContent = fmtUSD(hodlNet);
+  } else {
+    if (headlineLabel) headlineLabel.textContent = 'Net Profit / Month';
+    headline.textContent = fmtUSD(m1Net);
+    headline.className = 'result-value' + (m1Net < 0 ? ' negative' : '');
+    const monthSats = m1Net > 0 && state.network.btcPrice > 0
+      ? Math.round((m1Net / state.network.btcPrice) * 1e8)
+      : 0;
+    sub.textContent = m1Net > 0
+      ? 'profit ≈ ' + monthSats.toLocaleString('en-US') + ' sats / mo at today\'s price'
+      : (m1Net < 0 ? 'unprofitable at month 1' : '—');
+    $('#results-headline').textContent = fmtUSD(lifetimeProfit);
+  }
+
+  // KPIs (share-invariant — describe the operation, not the partner's slice)
+  const kBe = $('#kpi-breakeven');
+  const beMonth = mode === 'hodl' ? p.hodlBreakevenMonth : p.breakevenMonth;
+  if (beMonth == null) {
+    kBe.textContent = 'Never';
+    kBe.className = 's-value breakeven never';
+  } else {
+    kBe.textContent = beMonth + ' mo';
+    kBe.className = 's-value breakeven';
+  }
+
+  const kRoi = $('#kpi-roi');
+  const roi = mode === 'hodl' ? p.hodlRoi : p.roi;
+  kRoi.textContent = fmtPct(roi);
+  kRoi.className = 's-value roi' + (roi < 0 ? ' negative' : '');
+
+  $('#kpi-cost-per-btc').textContent = isFinite(p.allInCostPerBtc) ? fmtUSD(p.allInCostPerBtc) : '—';
+
   const tbody = $('#results-tbody');
   const tip = (s) => `<span class="hint-icon" data-tip="${s.replace(/"/g, '&quot;')}">?</span>`;
   const grossRevTip = `BTC mined × BTC price, summed month by month. Each month's BTC is valued at that month's price (not the ending price). Avg realized: ${fmtUSD(avgRealizedPrice)}/BTC.`;
+  // Active mode's Net row gets the orange highlight; the inactive one stays plain.
+  const sellRowCls = mode === 'sell' ? 'total-row' : '';
+  const hodlRowCls = mode === 'hodl' ? 'total-row' : '';
   tbody.innerHTML = `
     <tr class="group-start">
       <td class="label">BTC mined ${tip('Bitcoin mined by the operation. Per-month is month 1; lifetime sums over the horizon. Halving and difficulty growth are applied through the projection.')}</td>
@@ -1777,7 +1818,7 @@ function renderResults(p) {
       <td class="r sub">—</td>
       <td class="r neg">${fmtUSD(-sharedCapex)}</td>
     </tr>
-    <tr class="total-row">
+    <tr class="${sellRowCls}">
       <td class="label">Net (sell as mined) ${tip('Lifetime sum of monthly operating profits, minus upfront CapEx. Assumes you sell each month\'s BTC at that month\'s price — the realized cash-flow model.')}</td>
       <td class="r ${m1Net>=0?'pos':'neg'}">${fmtUSD(m1Net)}</td>
       <td class="r ${lifetimeProfit>=0?'pos':'neg'}">${fmtUSD(lifetimeProfit)}</td>
@@ -1787,7 +1828,7 @@ function renderResults(p) {
       <td class="r sub">—</td>
       <td class="r accent">${fmtUSD(stashAtHorizon)}</td>
     </tr>
-    <tr class="total-row">
+    <tr class="${hodlRowCls}">
       <td class="label">Net (HODL) ${tip('BTC stash @ horizon − power − pool/maintenance − CapEx. Assumes you never sell mined BTC and pay all USD costs from external reserves; sell once at the horizon price.')}</td>
       <td class="r sub">—</td>
       <td class="r ${hodlNet>=0?'pos':'neg'}">${fmtUSD(hodlNet)}</td>
@@ -1858,6 +1899,10 @@ function renderCharts(p) {
   if (!window.Chart) return;
   const c = chartColors();
   const share = viewShareFactor();
+  const mode = state.ui.strategyMode === 'hodl' ? 'hodl' : 'sell';
+  const trajKey = mode === 'hodl' ? 'hodlValue' : 'cumulative';
+  const beMonth = mode === 'hodl' ? p.hodlBreakevenMonth : p.breakevenMonth;
+  const cumLabel = mode === 'hodl' ? 'HODL net wealth (USD)' : 'Cumulative net (USD)';
 
   // Cumulative profit — stacked per-site when "All" is selected with 2+ sites
   destroyChart('cum');
@@ -1872,7 +1917,7 @@ function renderCharts(p) {
       const color = palette[i % palette.length];
       return {
         label: site.name || ('Site ' + (i + 1)),
-        data: sp.rows.map(r => r.cumulative * share),
+        data: sp.rows.map(r => r[trajKey] * share),
         borderColor: color,
         backgroundColor: hexAlpha(color, 0.18),
         fill: true,
@@ -1883,16 +1928,16 @@ function renderCharts(p) {
     });
   } else {
     datasets = [{
-      label: 'Cumulative net (USD)',
-      data: p.rows.map(r => r.cumulative * share),
+      label: cumLabel,
+      data: p.rows.map(r => r[trajKey] * share),
       borderColor: c.accent,
       backgroundColor: 'rgba(247,147,26,0.10)',
       fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2
     }];
   }
 
-  const cumSub = p.breakevenMonth != null
-    ? `Break-even at month ${p.breakevenMonth} · horizon ${p.horizon} mo`
+  const cumSub = beMonth != null
+    ? `Break-even at month ${beMonth} · horizon ${p.horizon} mo`
     : `No break-even within ${p.horizon} mo`;
   $('#chart-cum-sub').textContent = isStacked ? (cumSub + ' · stacked by site') : cumSub;
 
@@ -1904,9 +1949,15 @@ function renderCharts(p) {
     options: cumOpts
   });
 
-  // Sensitivity charts honor the View selector
+  // Sensitivity charts honor the View selector and active strategy mode
   const sensSiteId = state.ui.resultsSiteId === 'all' ? null : state.ui.resultsSiteId;
   const sensSite = sensSiteId ? state.sites.find(s => s.id === sensSiteId) : null;
+  const sensMetric = (proj) => (mode === 'hodl' ? proj.hodlNet : proj.horizonProfit) * share;
+  const sensLabel = mode === 'hodl' ? 'HODL net' : 'Lifetime net';
+  const subPrefix = mode === 'hodl' ? 'HODL net wealth' : 'Lifetime net profit';
+  const elPriceSub = $('#chart-sens-price-sub'); if (elPriceSub) elPriceSub.textContent = subPrefix + ' vs. BTC price (held flat)';
+  const elDiffSub = $('#chart-sens-diff-sub'); if (elDiffSub) elDiffSub.textContent = subPrefix + ' vs. annual difficulty growth %';
+  const elPowerSub = $('#chart-sens-power-sub'); if (elPowerSub) elPowerSub.textContent = subPrefix + ' vs. electricity rate $/kWh';
 
   // Sensitivity: BTC price
   destroyChart('sensPrice');
@@ -1915,13 +1966,13 @@ function renderCharts(p) {
   for (let m = 0.4; m <= 2.61; m += 0.1) priceMultipliers.push(parseFloat(m.toFixed(1)));
   const priceProfits = priceMultipliers.map(mult => {
     const s = cloneState(); s.network.btcPrice = basePrice * mult;
-    return project(s, sensSiteId).horizonProfit * share;
+    return sensMetric(project(s, sensSiteId));
   });
   chartRefs.sensPrice = new Chart($('#chart-sens-price'), {
     type:'line',
     data:{
       labels: priceMultipliers.map(m => '$' + Math.round(basePrice * m / 1000) + 'k'),
-      datasets:[{ label:'Lifetime net', data: priceProfits, borderColor: c.accent, backgroundColor:'rgba(247,147,26,0.10)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 }]
+      datasets:[{ label: sensLabel, data: priceProfits, borderColor: c.accent, backgroundColor:'rgba(247,147,26,0.10)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 }]
     },
     options: commonChartOpts()
   });
@@ -1931,13 +1982,13 @@ function renderCharts(p) {
   const diffRates = [-10, 0, 10, 20, 30, 40, 50, 60, 80, 100];
   const diffProfits = diffRates.map(r => {
     const s = cloneState(); s.network.diffGrowthYrPct = r;
-    return project(s, sensSiteId).horizonProfit * share;
+    return sensMetric(project(s, sensSiteId));
   });
   chartRefs.sensDiff = new Chart($('#chart-sens-diff'), {
     type:'line',
     data:{
       labels: diffRates.map(r => r + '%/yr'),
-      datasets:[{ label:'Lifetime net', data: diffProfits, borderColor: c.gold, backgroundColor:'rgba(212,168,67,0.12)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 }]
+      datasets:[{ label: sensLabel, data: diffProfits, borderColor: c.gold, backgroundColor:'rgba(212,168,67,0.12)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 }]
     },
     options: commonChartOpts()
   });
@@ -1956,7 +2007,7 @@ function renderCharts(p) {
       site.power.mode = 'kwh';
       site.power.elecRate = rate;
     });
-    return project(s, sensSiteId).horizonProfit * share;
+    return sensMetric(project(s, sensSiteId));
   });
   const opts = commonChartOpts();
   opts.scales.x.ticks.callback = function(v, idx) { return '$' + powerRates[idx].toFixed(2); };
@@ -1965,7 +2016,7 @@ function renderCharts(p) {
     data:{
       labels: powerRates.map(r => '$' + r.toFixed(2)),
       datasets:[
-        { label:'Lifetime net', data: powerProfits, borderColor: c.green, backgroundColor:'rgba(168,208,141,0.12)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 },
+        { label: sensLabel, data: powerProfits, borderColor: c.green, backgroundColor:'rgba(168,208,141,0.12)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 },
         { label:'Current rate', data: powerRates.map((r, i) => Math.abs(r - baseRate) < 0.005 ? powerProfits[i] : null), borderColor:c.accent, backgroundColor:c.accent, pointRadius:5, showLine:false }
       ]
     },
@@ -2083,28 +2134,20 @@ function summarizeSnapshot(snap) {
 
 function renderScenarios() {
   const content = $('#scenarios-content');
+  const mode = state.ui.strategyMode === 'hodl' ? 'hodl' : 'sell';
+  const trajKey = mode === 'hodl' ? 'hodlValue' : 'cumulative';
   const cur = project(state);
   const rows = [];
-  rows.push({
-    name: '(current)',
-    isCurrent: true,
-    breakeven: cur.breakevenMonth,
-    roi: cur.roi,
-    horizonProfit: cur.horizonProfit,
-    cumulative: cur.rows.map(r => r.cumulative),
-    horizon: cur.horizon
+  const summarize = (proj) => ({
+    breakeven: mode === 'hodl' ? proj.hodlBreakevenMonth : proj.breakevenMonth,
+    roi: mode === 'hodl' ? proj.hodlRoi : proj.roi,
+    horizonProfit: mode === 'hodl' ? proj.hodlNet : proj.horizonProfit,
+    cumulative: proj.rows.map(r => r[trajKey]),
+    horizon: proj.horizon
   });
+  rows.push({ name: '(current)', isCurrent: true, ...summarize(cur) });
   for (const sc of state.scenarios) {
-    const p = project(sc.snapshot);
-    rows.push({
-      id: sc.id,
-      name: sc.name,
-      breakeven: p.breakevenMonth,
-      roi: p.roi,
-      horizonProfit: p.horizonProfit,
-      cumulative: p.rows.map(r => r.cumulative),
-      horizon: p.horizon
-    });
+    rows.push({ id: sc.id, name: sc.name, ...summarize(project(sc.snapshot)) });
   }
 
   const currentParams = summarizeSnapshot(state);
@@ -2459,6 +2502,7 @@ function exportJSON() {
       activeSiteId: state.ui.activeSiteId,
       resultsSiteId: state.ui.resultsSiteId,
       resultsViewMode: state.ui.resultsViewMode,
+      strategyMode: state.ui.strategyMode,
       expandedMiners: state.ui.expandedMiners,
       capexExpanded: state.ui.capexExpanded,
       networkExpanded: state.ui.networkExpanded,
@@ -2522,6 +2566,7 @@ function clearAllData() {
   state.ops = { poolFeePct:1.5 };
   state.ownership = { sharePct:100 };
   state.ui.resultsViewMode = 'company';
+  state.ui.strategyMode = 'sell';
   state.network = {
     btcPrice: state.live.btcPrice || 95000,
     difficultyT: state.live.difficulty || 109.78,
@@ -2838,6 +2883,31 @@ function renderSiteSwitcher() {
   if (rmBtn) rmBtn.disabled = state.sites.length <= 1;
 }
 
+function renderStrategySelector() {
+  const box = $('#results-strategy-chips');
+  if (!box) return;
+  box.innerHTML = '';
+  const items = [
+    { mode: 'sell', name: 'Sell as mined' },
+    { mode: 'hodl', name: 'HODL' }
+  ];
+  for (const it of items) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'results-site-chip' + (state.ui.strategyMode === it.mode ? ' active' : '');
+    chip.textContent = it.name;
+    const mode = it.mode;
+    chip.addEventListener('click', () => {
+      if (state.ui.strategyMode === mode) return;
+      state.ui.strategyMode = mode;
+      markDirty();
+      renderStrategySelector();
+      recalcAndRender();
+    });
+    box.appendChild(chip);
+  }
+}
+
 function renderResultsSiteSelector() {
   const box = $('#results-site-chips');
   if (!box) return;
@@ -2865,6 +2935,7 @@ function renderResultsSiteSelector() {
     box.innerHTML = '';
   }
   renderShareSelector();
+  renderStrategySelector();
 }
 
 function renderShareSelector() {
