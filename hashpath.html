@@ -62,7 +62,7 @@
   .result-sub{font-family:var(--mono);font-size:14px;color:var(--text-muted);margin-top:3px}
 
   /* ── SUMMARY BAR ── */
-  .summary-bar{position:fixed;top:166px;left:0;right:0;z-index:50;display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);background:var(--surface)}
+  .summary-bar{position:fixed;top:166px;left:0;right:0;z-index:50;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);border-bottom:1px solid var(--border);background:var(--surface)}
   .summary-item{padding:14px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px}
   .summary-item:last-child{border-right:none}
   .s-label{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim)}
@@ -102,13 +102,13 @@
   .calc-col-2{grid-area:col2}
   .calc-col-r{grid-area:results}
   @media (min-width:1400px){
-    .calc-grid{grid-template-columns:1fr 1fr 1fr;grid-template-areas:"col1 col2 results"}
+    .calc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);grid-template-areas:"col1 col2 results"}
   }
   @media (min-width:1100px) and (max-width:1399px){
-    .calc-grid{grid-template-columns:1fr 1fr;grid-template-areas:"col1 results" "col2 results";align-items:start}
+    .calc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"col1 results" "col2 results";align-items:start}
   }
   @media (max-width:1099px){
-    .calc-grid{grid-template-columns:1fr;grid-template-areas:"col1" "col2" "results"}
+    .calc-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"col1" "col2" "results"}
   }
 
   /* ── FIELD GRID ── */
@@ -141,7 +141,7 @@
   /* ── HINT ICON / TOOLTIP ── */
   .hint-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:10px;cursor:help;position:relative;flex:none;line-height:1}
   .hint-icon:hover{color:var(--text-muted);border-color:var(--text-dim)}
-  .hint-icon::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);padding:8px 12px;background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:12px;font-style:normal;line-height:1.4;letter-spacing:.3px;white-space:normal;width:240px;text-align:left;z-index:200;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .15s}
+  .hint-icon::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);padding:8px 12px;background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:12px;font-style:normal;line-height:1.4;letter-spacing:.3px;white-space:normal;width:max-content;max-width:min(240px,calc(100vw - 24px));text-align:left;z-index:200;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .15s}
   .hint-icon:hover::after{opacity:1;visibility:visible}
   .hint-icon::before{content:'';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border);z-index:200;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .15s}
   .hint-icon:hover::before{opacity:1;visibility:visible}
@@ -253,8 +253,8 @@
   .fleet-stat-value{font-family:var(--mono);font-size:14px;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* ── CHARTS ── */
-  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-  @media (max-width:1100px){.charts-grid{grid-template-columns:1fr}}
+  .charts-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+  @media (max-width:1100px){.charts-grid{grid-template-columns:minmax(0,1fr)}}
   .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both}
   .chart-card.wide{grid-column:1/-1}
   .chart-card-header{padding:14px 18px 10px;border-bottom:1px solid var(--border);text-align:center}
@@ -385,7 +385,8 @@
     .header-left h1{font-size:30px}
     .header-right{text-align:left}
     .result-value{font-size:34px}
-    .summary-bar{position:static;grid-template-columns:1fr 1fr 1fr}
+    .summary-bar{position:static;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+    .results-table th,.results-table td{white-space:normal}
     .s-value{font-size:18px}
     .tab-nav{position:static;padding:0 12px;flex-wrap:wrap}
     .tab-btn{font-size:13px;padding:11px 12px}
