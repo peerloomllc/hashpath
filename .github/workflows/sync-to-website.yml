@@ -1,0 +1,59 @@
+name: Sync to PeerLoom website
+
+on:
+  push:
+    branches: [master]
+    paths: [hashpath.html]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout hashpath repo
+        uses: actions/checkout@v4
+
+      - name: Checkout website repo
+        uses: actions/checkout@v4
+        with:
+          repository: peerloomllc/website
+          token: ${{ secrets.WEBSITE_PAT }}
+          path: website
+
+      - name: Copy hashpath.html and generate sw.js
+        run: |
+          cp hashpath.html website/hashpath/app.html
+          cat > website/hashpath/sw.js << 'SWEOF'
+          const CACHE = 'hashpath-pwa-v1';
+          self.addEventListener('install', e => {
+            e.waitUntil(caches.open(CACHE).then(c => c.add(self.registration.scope)));
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', e => {
+            e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+            self.clients.claim();
+          });
+          self.addEventListener('fetch', e => {
+            if (e.request.mode === 'navigate') {
+              e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+            }
+          });
+          SWEOF
+
+      - name: Check for changes
+        id: diff
+        working-directory: website
+        run: |
+          git diff --quiet hashpath/ && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        working-directory: website
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hashpath/app.html hashpath/sw.js
+          git commit -m "sync: update hashpath from hashpath repo
+
+          Triggered by ${{ github.event.head_commit.url }}"
+          git push
