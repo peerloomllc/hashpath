@@ -238,15 +238,15 @@
   .save-preset-btn:hover{color:var(--gold);border-color:var(--gold)}
 
   .add-row{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:center}
-  .add-miner-controls{display:flex;gap:8px;align-items:center;justify-content:center}
+  .add-miner-controls{width:100%;display:flex;gap:8px;align-items:center;justify-content:center;min-width:0}
   .add-row.expanded .add-miner-trigger{display:none}
   .add-row:not(.expanded) .add-miner-controls{display:none}
   .add-miner-trigger{min-width:140px}
-  .add-row-cancel{background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:0 6px;border-radius:3px;transition:color .15s}
+  .add-row-cancel{background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:0 6px;border-radius:3px;transition:color .15s;flex-shrink:0}
   .add-row-cancel:hover{color:var(--red)}
-  .preset-select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:14px;padding:7px 10px;outline:none;cursor:pointer;height:34px}
+  .preset-select{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:14px;padding:7px 10px;outline:none;cursor:pointer;height:34px}
   .preset-select:focus{border-color:var(--accent-dim)}
-  .add-row-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:14px;letter-spacing:1px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s;height:34px}
+  .add-row-btn{background:none;border:1px dashed var(--border-light);color:var(--text-dim);font-family:var(--mono);font-size:14px;letter-spacing:1px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s;height:34px;flex-shrink:0}
   .add-row-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
 
   .empty-miners{padding:24px 16px;text-align:center;font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:1px}
@@ -442,9 +442,9 @@
     .save-hint{display:none}
     .capex-row{grid-template-columns:1fr 110px 24px}
     .add-row{padding:10px 12px}
-    .add-miner-controls{width:100%;gap:6px}
-    .preset-select{flex:1;min-width:0;font-size:13px;padding:7px 8px}
-    .add-miner-controls .add-row-btn{padding:6px 10px;font-size:13px;letter-spacing:.5px;flex-shrink:0}
+    .add-miner-controls{gap:6px}
+    .preset-select{font-size:13px;padding:7px 8px}
+    .add-miner-controls .add-row-btn{padding:6px 10px;font-size:13px;letter-spacing:.5px}
   }
 </style>
 </head>
