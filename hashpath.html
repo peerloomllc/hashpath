@@ -69,13 +69,13 @@
   .kpi-tile-value .pos{color:var(--green)}
   .kpi-tile-value .neg{color:var(--red)}
   .kpi-tile-sub{font-family:var(--mono);font-size:12px;color:var(--text-dim);min-height:14px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .kpi-tile.primary{border-color:var(--accent-dim);grid-column:span 2}
-  .kpi-tile.primary .kpi-tile-value{font-family:var(--serif);font-size:42px;color:var(--accent);text-shadow:0 0 30px rgba(247,147,26,.25);letter-spacing:-.5px;line-height:1.05;white-space:normal}
-  .kpi-tile.primary .kpi-tile-value.green{color:var(--green);text-shadow:0 0 30px rgba(168,208,141,.3)}
-  .kpi-tile.primary .kpi-tile-value.red{color:var(--red);text-shadow:0 0 30px rgba(224,112,112,.25)}
-  .kpi-tile.primary .kpi-tile-value.range{font-size:24px;line-height:1.25}
+  .kpi-tile-sub .swap-link{color:var(--accent);cursor:pointer;border:none;background:none;font:inherit;letter-spacing:inherit;padding:0;text-decoration:underline;text-decoration-color:var(--accent-dim)}
+  .kpi-tile-sub .swap-link:hover{color:var(--accent);text-decoration-color:var(--accent)}
+  .kpi-tile-sub .swap-sep{color:var(--text-dim);margin:0 6px}
   @media (min-width:1100px){
-    .kpi-wall{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .kpi-wall{grid-template-columns:repeat(12,minmax(0,1fr))}
+    .kpi-tile{grid-column:span 3}
+    .kpi-tile.top{grid-column:span 4}
   }
   @media (max-width:1099px){
     .kpi-wall{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -83,7 +83,7 @@
   }
 
   /* ── TAB NAV ── */
-  .tab-nav{position:fixed;top:140px;left:0;right:0;z-index:50;display:flex;justify-content:center;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 32px}
+  .tab-nav{position:fixed;top:130px;left:0;right:0;z-index:50;display:flex;justify-content:center;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 32px}
   .tab-btn{font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:13px 18px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px}
   .tab-btn:hover{color:var(--text-muted)}
   .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -92,7 +92,7 @@
   .icon-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
 
   /* ── VIEW ── */
-  .view{display:none;position:relative;max-width:1500px;margin:0 auto;padding:240px 28px 120px}
+  .view{display:none;position:relative;max-width:1500px;margin:0 auto;padding:230px 28px 120px}
   .view.active{display:block}
 
   /* ── SECTION ── */
@@ -199,7 +199,7 @@
   .site-remove-btn:disabled:hover{color:var(--text-dim);border-color:var(--border)}
 
   /* ── RESULTS STRIP (fixed, persistent across tabs) ── */
-  .results-site-strip{position:fixed;top:184px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
+  .results-site-strip{position:fixed;top:174px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
   .results-site-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
   .results-site-chips{display:flex;flex-wrap:wrap;gap:5px}
   .results-site-chip{font-family:var(--mono);font-size:12px;letter-spacing:.5px;padding:3px 10px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text-muted);cursor:pointer;transition:all .15s}
@@ -402,6 +402,18 @@
   .ln-addr:hover{border-color:var(--accent-dim)}
   .ln-hint{font-family:var(--mono);font-size:13px;color:var(--text-dim);text-align:center}
 
+  /* ── WHAT'S NEW MODAL ── */
+  #whats-new-modal{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
+  #whats-new-modal.hidden{display:none}
+  .whats-new-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:32px 36px;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .2s ease;max-height:90vh;overflow-y:auto}
+  .whats-new-title{font-family:var(--serif);font-size:25px;font-weight:400;letter-spacing:-.3px;text-align:center}
+  .whats-new-version{font-family:var(--mono);font-size:14px;color:var(--accent);text-align:center;letter-spacing:1.5px}
+  .whats-new-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .whats-new-list li{font-family:var(--mono);font-size:14px;color:var(--text-muted);line-height:1.7;padding-left:16px;position:relative}
+  .whats-new-list li::before{content:'\2022';color:var(--accent);position:absolute;left:0}
+  .whats-new-btn{background:var(--accent);border:none;color:var(--bg);font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:1px;padding:10px 16px;border-radius:4px;cursor:pointer;transition:opacity .15s;width:100%;text-align:center}
+  .whats-new-btn:hover{opacity:0.85}
+
   /* ── TOAST ── */
   .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);z-index:200;background:var(--surface2);border:1px solid var(--border-light);color:var(--text);font-family:var(--mono);font-size:14px;padding:9px 16px;border-radius:5px;opacity:0;transition:all .2s;pointer-events:none}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -420,8 +432,6 @@
     .results-site-strip{position:static}
     .view{padding:24px 14px 60px}
     .kpi-tile-value{font-size:22px}
-    .kpi-tile.primary .kpi-tile-value{font-size:32px}
-    .kpi-tile.primary .kpi-tile-value.range{font-size:20px}
     .calc-grid{gap:14px}
     .miner-fields{grid-template-columns:1fr 1fr;padding-left:18px}
     .field-grid{grid-template-columns:1fr}
@@ -494,7 +504,17 @@
 
   <!-- KPI WALL -->
   <section class="kpi-wall">
-    <div class="kpi-tile primary">
+    <div class="kpi-tile top">
+      <div class="kpi-tile-label">BTC mined (lifetime)</div>
+      <div class="kpi-tile-value" id="kpi-btc">—</div>
+      <div class="kpi-tile-sub" id="kpi-btc-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-tile top">
+      <div class="kpi-tile-label">BTC stash @ horizon</div>
+      <div class="kpi-tile-value" id="kpi-stash">—</div>
+      <div class="kpi-tile-sub" id="kpi-stash-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-tile top primary">
       <div class="kpi-tile-label" id="kpi-net-label">Net Profit (Lifetime)</div>
       <div class="kpi-tile-value" id="kpi-net">—</div>
       <div class="kpi-tile-sub" id="kpi-net-sub">—</div>
@@ -510,19 +530,9 @@
       <div class="kpi-tile-sub" id="kpi-roi-sub">&nbsp;</div>
     </div>
     <div class="kpi-tile">
-      <div class="kpi-tile-label">BTC mined (lifetime)</div>
-      <div class="kpi-tile-value" id="kpi-btc">—</div>
-      <div class="kpi-tile-sub" id="kpi-btc-sub">&nbsp;</div>
-    </div>
-    <div class="kpi-tile">
       <div class="kpi-tile-label">All-in cost / BTC</div>
       <div class="kpi-tile-value" id="kpi-cost-per-btc">—</div>
       <div class="kpi-tile-sub" id="kpi-cost-per-btc-sub">&nbsp;</div>
-    </div>
-    <div class="kpi-tile">
-      <div class="kpi-tile-label">BTC stash @ horizon</div>
-      <div class="kpi-tile-value" id="kpi-stash">—</div>
-      <div class="kpi-tile-sub" id="kpi-stash-sub">&nbsp;</div>
     </div>
     <div class="kpi-tile">
       <div class="kpi-tile-label" id="kpi-aux-label">Total CapEx</div>
@@ -740,8 +750,8 @@
           </div>
           <div class="field-group">
             <label class="field-label">BTC price growth</label>
-            <div class="field-suffix long" data-suffix="%/mo">
-              <input type="number" class="field-input" id="price-growth" step="0.1" value="2.53">
+            <div class="field-suffix long" data-suffix="%/yr">
+              <input type="number" class="field-input" id="price-growth" step="1" value="35">
             </div>
           </div>
           <div class="field-group">
@@ -957,6 +967,17 @@
   </div>
 </div>
 
+<!-- WHAT'S NEW MODAL -->
+<div id="whats-new-modal" class="hidden">
+  <div class="whats-new-card">
+    <div class="whats-new-title">What's New</div>
+    <div class="whats-new-version" id="whats-new-version"></div>
+    <hr class="about-divider">
+    <ul class="whats-new-list" id="whats-new-list"></ul>
+    <button class="whats-new-btn" id="whats-new-close">Got It</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1028,6 +1049,17 @@ const NEXT_HALVING_BLOCK = 1050000;
 const POST_HALVING_REWARD = 1.5625;
 const FALLBACK_HALVING_DATE = new Date('2028-04-19T00:00:00Z');
 
+const APP_VERSION = '1.0.0';
+const CHANGELOG_SEEN_KEY = 'hashpath-changelog-seen';
+const CHANGELOG = [
+  { version: '1.0.0', items: [
+    'KPI dashboard reordered: top row is BTC mined, BTC stash @ horizon, and Net Profit @ horizon; the four operational tiles (break-even, ROI, all-in cost / BTC, total CapEx) sit on the second row',
+    'BTC price growth now uses yearly CAGR (%/yr) to match the difficulty-growth and energy-inflation fields. Existing saves are migrated automatically',
+    'Variance band on the aux KPI tile is opt-in — a small "show 90% range" link appears only under TIDES / Solo payout models',
+    'Added "What\'s New" popup to surface changes after each update'
+  ]}
+];
+
 // Approximate specs. User can edit any field after picking.
 const MINER_PRESETS = [
   { id:'s21-pro',    name:'Antminer S21 Pro',     hashrate:234, watts:3531, cost:6500 },
@@ -1049,18 +1081,17 @@ const QUICK_SCENARIOS = {
   // (more miners come online when BTC rallies, fewer when it stalls).
   'bear': {
     name: 'Bear',
-    // BTC price ~+15%/yr → ~1.17%/mo compounded; diff +15%/yr (slow miner growth)
-    overrides: { priceGrowthMo: 1.17, diffGrowthYr: 15 }
+    // Slow miner growth tracking modest BTC appreciation
+    overrides: { priceGrowthYr: 15, diffGrowthYr: 15 }
   },
   'status-quo': {
     name: 'Status Quo',
-    // BTC price ~+35%/yr → ~2.53%/mo; diff +30%/yr
-    overrides: { priceGrowthMo: 2.53, diffGrowthYr: 30 }
+    overrides: { priceGrowthYr: 35, diffGrowthYr: 30 }
   },
   'bull': {
     name: 'Bull',
-    // BTC price ~+75%/yr → ~4.78%/mo; diff +50%/yr (fleet expansion follows price)
-    overrides: { priceGrowthMo: 4.78, diffGrowthYr: 50 }
+    // Fleet expansion follows price
+    overrides: { priceGrowthYr: 75, diffGrowthYr: 50 }
   }
 };
 
@@ -1081,11 +1112,11 @@ const state = {
     blockReward: 3.125,
     nextAdjPct: 0,
     diffGrowthYrPct: 30,
-    priceGrowthMoPct: 2.53,   // ~+35%/yr — Status Quo CAGR baseline (see QUICK_SCENARIOS)
+    priceGrowthYrPct: 35,     // Status Quo CAGR baseline (see QUICK_SCENARIOS)
     energyInflationYrPct: 0,
     horizonMonths: 36
   },
-  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false, detailExpanded:false, inputsExpanded:true },
+  ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', showVariance:false, expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false, detailExpanded:false, inputsExpanded:true },
   scenarios: [],
   // Cached live data (informational only — display in ticker)
   live: {
@@ -1151,6 +1182,7 @@ function persist() {
         resultsSiteId: state.ui.resultsSiteId,
         resultsViewMode: state.ui.resultsViewMode,
         strategyMode: state.ui.strategyMode,
+        showVariance: state.ui.showVariance,
         expandedMiners: state.ui.expandedMiners,
         minersExpanded: state.ui.minersExpanded,
         capexExpanded: state.ui.capexExpanded,
@@ -1218,6 +1250,15 @@ function migrateSnapshot(snap) {
   if (!isFinite(sharePct)) sharePct = 100;
   out.ownership = { sharePct: Math.max(0, Math.min(100, sharePct)) };
   delete out.power;
+  // BTC price growth migrated from monthly % to yearly CAGR
+  if (out.network && typeof out.network === 'object') {
+    const moRaw = out.network.priceGrowthMoPct;
+    const yrRaw = out.network.priceGrowthYrPct;
+    if (!isFinite(+yrRaw) && isFinite(+moRaw)) {
+      out.network.priceGrowthYrPct = (Math.pow(1 + (+moRaw) / 100, 12) - 1) * 100;
+    }
+    delete out.network.priceGrowthMoPct;
+  }
   return out;
 }
 
@@ -1231,7 +1272,7 @@ function applySnapshotData(snap) {
 
   state.network = {
     btcPrice: 95000, difficultyT: 109.78, blockReward: 3.125, nextAdjPct: 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, energyInflationYrPct: 0, horizonMonths: 36,
+    diffGrowthYrPct: 30, priceGrowthYrPct: 35, energyInflationYrPct: 0, horizonMonths: 36,
     ...(snap.network || {})
   };
   if (snap.ui) {
@@ -1251,6 +1292,7 @@ function applySnapshotData(snap) {
     if (snap.ui.strategyMode === 'hodl' || snap.ui.strategyMode === 'sell') {
       state.ui.strategyMode = snap.ui.strategyMode;
     }
+    state.ui.showVariance = !!snap.ui.showVariance;
   }
   // Migrate scenario snapshots so legacy ones project correctly
   state.scenarios = (snap.scenarios || []).map(sc => ({
@@ -1543,7 +1585,7 @@ function project(s, siteId = null) {
   let reward = +opts.network.blockReward || 0;
   const nextAdj = (+opts.network.nextAdjPct || 0) / 100;
   const monthlyDiffMul = Math.pow(1 + (+opts.network.diffGrowthYrPct || 0) / 100, 1/12);
-  const monthlyPriceMul = 1 + (+opts.network.priceGrowthMoPct || 0) / 100;
+  const monthlyPriceMul = Math.pow(1 + (+opts.network.priceGrowthYrPct || 0) / 100, 1/12);
   const monthlyEnergyMul = Math.pow(1 + (+opts.network.energyInflationYrPct || 0) / 100, 1/12);
   const horizon = Math.max(1, Math.min(120, Math.round(+opts.network.horizonMonths || 1)));
 
@@ -1957,7 +1999,7 @@ function renderResults(p) {
   const mode = state.ui.strategyMode === 'hodl' ? 'hodl' : 'sell';
 
   if (p.fleet.hashrate <= 0) {
-    $('#kpi-net-label').textContent = mode === 'hodl' ? 'Net Wealth @ Horizon' : 'Net Profit (Lifetime)';
+    $('#kpi-net-label').textContent = mode === 'hodl' ? 'Net Profit @ Horizon' : 'Net Profit (Lifetime)';
     setKpi('kpi-net', '—');
     setKpiSub('kpi-net-sub', 'Add at least one miner to start');
     setKpi('kpi-breakeven', '—');
@@ -2013,10 +2055,11 @@ function renderResults(p) {
   const hodlNetLow = (stashAtHorizon - totalFees) * ratioLow - totalPower - sharedCapex;
   const hodlNetHigh = (stashAtHorizon - totalFees) * ratioHigh - totalPower - sharedCapex;
   const showVarianceRow = varianceMode !== 'fpps' && lifetimeBtc > 0 && (lifetimeBtcHigh - lifetimeBtcLow) > 0;
+  const showVarianceKpi = showVarianceRow && !!state.ui.showVariance;
 
   // Net (primary tile) - active strategy drives label, value, and sub
   if (mode === 'hodl') {
-    $('#kpi-net-label').textContent = 'Net Wealth @ Horizon';
+    $('#kpi-net-label').textContent = 'Net Profit @ Horizon';
     setKpi('kpi-net', fmtUSD(hodlNet), hodlNet < 0 ? 'red' : 'green');
     setKpiSub('kpi-net-sub',
       stashAtHorizon > 0
@@ -2058,22 +2101,28 @@ function renderResults(p) {
   setKpi('kpi-stash', fmtUSD(stashAtHorizon), 'green');
   setKpiSub('kpi-stash-sub', endingPrice > 0 ? `at ${fmtUSD(endingPrice)}/btc (m${p.horizon})` : '');
 
-  // Aux tile: 90% range when payout model is non-FPPS, otherwise total CapEx
+  // Aux tile: defaults to Total CapEx. Under TIDES / Solo, an opt-in link
+  // swaps the tile to the 90% net-profit range.
   const auxEl = document.getElementById('kpi-aux');
-  if (showVarianceRow) {
+  const auxSub = document.getElementById('kpi-aux-sub');
+  const swapLink = (label) => `<button type="button" class="swap-link" id="kpi-aux-swap">${label}</button>`;
+  if (showVarianceKpi) {
     const lo = mode === 'hodl' ? hodlNetLow : sellNetLow;
     const hi = mode === 'hodl' ? hodlNetHigh : sellNetHigh;
     $('#kpi-aux-label').textContent = `${mode === 'hodl' ? 'Net (HODL)' : 'Net (sell)'}, 90% range`;
     auxEl.classList.remove('accent', 'gold', 'green', 'red');
     auxEl.classList.add('range');
     auxEl.innerHTML = `<span class="${lo>=0?'pos':'neg'}">${fmtUSD(lo)}</span><br><span class="${hi>=0?'pos':'neg'}">${fmtUSD(hi)}</span>`;
-    setKpiSub('kpi-aux-sub', `5th to 95th percentile · ${varianceMode === 'tides' ? 'TIDES' : 'Solo'}`);
+    auxSub.innerHTML = `5th to 95th · ${varianceMode === 'tides' ? 'TIDES' : 'Solo'}<span class="swap-sep">·</span>${swapLink('show CapEx')}`;
   } else {
     auxEl.classList.remove('range');
     $('#kpi-aux-label').textContent = 'Total CapEx';
     auxEl.innerHTML = '';
     setKpi('kpi-aux', fmtUSD(sharedCapex), 'green');
-    setKpiSub('kpi-aux-sub', `${p.fleet.units} unit${p.fleet.units === 1 ? '' : 's'}`);
+    const unitsText = `${p.fleet.units} unit${p.fleet.units === 1 ? '' : 's'}`;
+    auxSub.innerHTML = showVarianceRow
+      ? `${unitsText}<span class="swap-sep">·</span>${swapLink('show 90% range')}`
+      : unitsText;
   }
 
   const tbody = $('#results-tbody');
@@ -2488,7 +2537,7 @@ function applyScenarioSnapshot(snap) {
 function applyQuickScenario(key) {
   const q = QUICK_SCENARIOS[key];
   if (!q) return;
-  state.network.priceGrowthMoPct = q.overrides.priceGrowthMo;
+  state.network.priceGrowthYrPct = q.overrides.priceGrowthYr;
   state.network.diffGrowthYrPct = q.overrides.diffGrowthYr;
   syncInputsFromState();
   recalcAndRender();
@@ -2503,8 +2552,8 @@ function renderQuickPresets() {
   for (const [key, q] of Object.entries(QUICK_SCENARIOS)) {
     const card = document.createElement('div');
     card.className = 'quick-preset';
-    const sign = q.overrides.priceGrowthMo > 0 ? '+' : '';
-    const sub = 'price ' + sign + q.overrides.priceGrowthMo + '%/mo · diff ' + q.overrides.diffGrowthYr + '%/yr';
+    const sign = q.overrides.priceGrowthYr > 0 ? '+' : '';
+    const sub = 'price ' + sign + q.overrides.priceGrowthYr + '%/yr · diff ' + q.overrides.diffGrowthYr + '%/yr';
     const btn = document.createElement('button');
     btn.className = 'quick-btn';
     btn.dataset.quick = key;
@@ -2526,13 +2575,13 @@ function summarizeSnapshot(snap) {
   const minersCost = (snap.miners || []).reduce((sum, m) => sum + ((m.units || 0) * (m.cost || 0)), 0);
   const otherCapex = (snap.capexItems || []).reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
   const totalCapex = minersCost + otherCapex;
-  const priceGr = +network.priceGrowthMoPct || 0;
+  const priceGr = +network.priceGrowthYrPct || (isFinite(+network.priceGrowthMoPct) ? (Math.pow(1 + (+network.priceGrowthMoPct)/100, 12) - 1) * 100 : 0);
   const diffGr = +network.diffGrowthYrPct || 0;
   const horizon = +network.horizonMonths || 0;
   const share = own.sharePct == null ? 100 : +own.sharePct;
   const parts = [];
   parts.push('BTC ' + fmtUSD(+network.btcPrice || 0));
-  parts.push('price ' + (priceGr >= 0 ? '+' : '') + priceGr + '%/mo');
+  parts.push('price ' + (priceGr >= 0 ? '+' : '') + (Math.round(priceGr * 10) / 10) + '%/yr');
   parts.push('diff +' + diffGr + '%/yr');
   parts.push(horizon + ' mo');
   if (share < 100) parts.push(share + '% share');
@@ -2737,7 +2786,7 @@ function syncInputsFromState() {
   $('#block-reward').value = state.network.blockReward;
   $('#next-adj').value = +(+state.network.nextAdjPct).toFixed(2);
   $('#diff-growth').value = state.network.diffGrowthYrPct;
-  $('#price-growth').value = state.network.priceGrowthMoPct;
+  $('#price-growth').value = state.network.priceGrowthYrPct;
   $('#energy-inflation').value = state.network.energyInflationYrPct;
   $('#horizon').value = state.network.horizonMonths;
   $('#ownership-share').value = state.ownership.sharePct;
@@ -2854,6 +2903,19 @@ function closeAbout() {
   if (ln) ln.style.display = 'none';
 }
 
+function checkWhatsNew() {
+  if (localStorage.getItem(CHANGELOG_SEEN_KEY) === APP_VERSION) return;
+  const entry = CHANGELOG.find(c => c.version === APP_VERSION);
+  if (!entry) return;
+  $('#whats-new-version').textContent = 'v' + entry.version;
+  $('#whats-new-list').innerHTML = entry.items.map(it => '<li>' + it + '</li>').join('');
+  $('#whats-new-modal').classList.remove('hidden');
+}
+function dismissWhatsNew() {
+  $('#whats-new-modal').classList.add('hidden');
+  try { localStorage.setItem(CHANGELOG_SEEN_KEY, APP_VERSION); } catch (e) {}
+}
+
 const LN_ADDR = 'peerloomllc@strike.me';
 function isMobile() { return navigator.maxTouchPoints > 0 && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent); }
 
@@ -2927,6 +2989,7 @@ function exportJSON() {
       resultsSiteId: state.ui.resultsSiteId,
       resultsViewMode: state.ui.resultsViewMode,
       strategyMode: state.ui.strategyMode,
+      showVariance: state.ui.showVariance,
       expandedMiners: state.ui.expandedMiners,
       capexExpanded: state.ui.capexExpanded,
       networkExpanded: state.ui.networkExpanded,
@@ -2999,7 +3062,7 @@ function clearAllData() {
     difficultyT: state.live.difficulty || 109.78,
     blockReward: 3.125,
     nextAdjPct: state.live.nextAdjPct || 0,
-    diffGrowthYrPct: 30, priceGrowthMoPct: 2.53, energyInflationYrPct: 0, horizonMonths: 36
+    diffGrowthYrPct: 30, priceGrowthYrPct: 35, energyInflationYrPct: 0, horizonMonths: 36
   };
   syncInputsFromState();
   renderSiteSwitcher();
@@ -3029,6 +3092,20 @@ function saveNow() {
 }
 
 function bindInputs() {
+  // Aux KPI tile swap link (Total CapEx <-> 90% range). Delegated because
+  // the link is re-rendered into #kpi-aux-sub on every recalcAndRender.
+  const auxSubEl = document.getElementById('kpi-aux-sub');
+  if (auxSubEl) {
+    auxSubEl.addEventListener('click', (e) => {
+      const t = e.target.closest('#kpi-aux-swap');
+      if (!t) return;
+      e.preventDefault();
+      state.ui.showVariance = !state.ui.showVariance;
+      markDirty();
+      recalcAndRender();
+    });
+  }
+
   // Site switcher: input is a buffer for the next site to create.
   // Add reads it, creates the new site with that name, clears the input.
   // Empty input falls back to a "Site N" default.
@@ -3134,7 +3211,7 @@ function bindInputs() {
     markDirty(); recalcAndRender();
   });
   $('#diff-growth').addEventListener('input', (e) => { state.network.diffGrowthYrPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
-  $('#price-growth').addEventListener('input', (e) => { state.network.priceGrowthMoPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
+  $('#price-growth').addEventListener('input', (e) => { state.network.priceGrowthYrPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
   $('#energy-inflation').addEventListener('input', (e) => { state.network.energyInflationYrPct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
   $('#horizon').addEventListener('input', (e) => {
     state.network.horizonMonths = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
@@ -3270,11 +3347,16 @@ function bindInputs() {
   $('#about-modal').addEventListener('click', (e) => { if (e.target.id === 'about-modal') closeAbout(); });
   $('#donate-btc-link').addEventListener('click', (e) => { e.preventDefault(); handleDonateBtc(); });
 
+  // What's New modal
+  $('#whats-new-close').addEventListener('click', dismissWhatsNew);
+  $('#whats-new-modal').addEventListener('click', (e) => { if (e.target.id === 'whats-new-modal') dismissWhatsNew(); });
+
   // Escape closes any open modal
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (!$('#settings-modal').classList.contains('hidden')) closeSettings();
     else if (!$('#about-modal').classList.contains('hidden')) closeAbout();
+    else if (!$('#whats-new-modal').classList.contains('hidden')) dismissWhatsNew();
   });
 
   // Ctrl/Cmd+S to save
@@ -3498,6 +3580,9 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
   // Helpful first-run nudge
   if (!had) {
     setTimeout(() => showToast('Welcome to HashPath — pick a miner preset to start', 'success'), 400);
+  } else {
+    // Don't surface "What's New" on a fresh install — the user has nothing to compare against
+    checkWhatsNew();
   }
 })();
 </script>
