@@ -755,7 +755,7 @@
             </div>
           </div>
           <div class="field-group">
-            <label class="field-label">Energy inflation <span class="hint-icon" data-tip="Annual % escalator applied to both your $/kWh rate and any $/kW/mo hosting rate, compounded monthly across the projection. Applied globally because most operators run a single utility or contract structure — if you have mixed contracts (e.g. fixed-rate solar vs grid PPI+1%), enter a blended estimate.">?</span></label>
+            <label class="field-label">Energy inflation <span class="hint-icon" data-tip="Annual % escalator applied to both your $/kWh rate and any $/kW/mo hosting rate, compounded monthly across the projection. Applied globally because most operators run a single utility or contract structure - if you have mixed contracts (e.g. fixed-rate solar vs grid PPI+1%), enter a blended estimate.">?</span></label>
             <div class="field-suffix long" data-suffix="%/yr">
               <input type="number" class="field-input" id="energy-inflation" step="0.1" value="0">
             </div>
@@ -844,7 +844,7 @@
 
   <div class="chart-card wide" style="margin-top:18px">
     <div class="chart-card-header">
-      <div class="chart-card-title">Cumulative profit — overlay</div>
+      <div class="chart-card-title">Cumulative profit - overlay</div>
       <div class="chart-card-sub">Current scenario in orange; saved scenarios overlaid</div>
     </div>
     <div class="chart-body tall"><canvas id="chart-scenarios"></canvas></div>
@@ -853,7 +853,7 @@
 
 <!-- SAVE BAR -->
 <div class="save-bar">
-  <div class="save-hint">All data saved locally — <span>never leaves this device</span></div>
+  <div class="save-hint">All data saved locally - <span>never leaves this device</span></div>
   <div class="btn-group">
     <button class="btn btn-about" id="open-about-btn"><span class="about-icon">i</span> About</button>
     <button class="btn btn-ghost" id="open-settings-btn" title="Settings">&#9881; Settings</button>
@@ -1055,7 +1055,7 @@ const CHANGELOG = [
   { version: '1.0.0', items: [
     'KPI dashboard reordered: top row is BTC mined, BTC stash @ horizon, and Net Profit @ horizon; the four operational tiles (break-even, ROI, all-in cost / BTC, total CapEx) sit on the second row',
     'BTC price growth now uses yearly CAGR (%/yr) to match the difficulty-growth and energy-inflation fields. Existing saves are migrated automatically',
-    'Variance band on the aux KPI tile is opt-in — a small "show 90% range" link appears only under TIDES / Solo payout models',
+    'Variance band on the aux KPI tile is opt-in - a small "show 90% range" link appears only under TIDES / Solo payout models',
     'Added "What\'s New" popup to surface changes after each update'
   ]}
 ];
@@ -1118,7 +1118,7 @@ const state = {
   },
   ui: { theme:'dark', activeTab:'calc', activeSiteId:null, resultsSiteId:'all', resultsViewMode:'company', strategyMode:'sell', showVariance:false, expandedMiners:{}, minersExpanded:false, capexExpanded:false, networkExpanded:false, networkAdvancedExpanded:false, detailExpanded:false, inputsExpanded:true },
   scenarios: [],
-  // Cached live data (informational only — display in ticker)
+  // Cached live data (informational only - display in ticker)
   live: {
     btcPrice: null, difficulty: null, nextAdjPct: null,
     nextAdjBlocks: null, nextAdjEta: null,
@@ -1478,7 +1478,7 @@ async function refreshLive() {
       const secondsLeft = blocksLeft * 600;
       state.live.halvingDate = new Date(Date.now() + secondsLeft * 1000);
     } else {
-      // Already past the halving — reduce default reward suggestion
+      // Already past the halving - reduce default reward suggestion
       state.live.halvingDate = null;
     }
   }
@@ -1806,7 +1806,7 @@ function renderMinerList() {
   if (mArrow) mArrow.classList.toggle('open', !!state.ui.minersExpanded);
   if (mBody) mBody.classList.toggle('open', !!state.ui.minersExpanded);
   if (minersOnSite.length === 0) {
-    list.innerHTML = '<div class="empty-miners">No miners yet — add a preset or custom rig below</div>';
+    list.innerHTML = '<div class="empty-miners">No miners yet - add a preset or custom rig below</div>';
     return;
   }
   list.innerHTML = '';
@@ -1918,10 +1918,10 @@ function refreshPresetDropdown() {
   const sel = $('#preset-select');
   if (!sel) return;
   const builtinOpts = MINER_PRESETS
-    .map(p => `<option value="${p.id}">${escapeHtml(p.name)} — ${p.hashrate} TH/s · ${p.watts} W</option>`)
+    .map(p => `<option value="${p.id}">${escapeHtml(p.name)} - ${p.hashrate} TH/s · ${p.watts} W</option>`)
     .join('');
   const savedOpts = state.customPresets
-    .map(p => `<option value="${p.id}">&#9733; ${escapeHtml(p.name)} — ${p.hashrate} TH/s · ${p.watts} W</option>`)
+    .map(p => `<option value="${p.id}">&#9733; ${escapeHtml(p.name)} - ${p.hashrate} TH/s · ${p.watts} W</option>`)
     .join('');
   let html = '<option value="">Pick a preset...</option>';
   html += '<optgroup label="Built-in">' + builtinOpts + '</optgroup>';
@@ -2244,7 +2244,7 @@ function renderCharts(p) {
   const beMonth = mode === 'hodl' ? p.hodlBreakevenMonth : p.breakevenMonth;
   const cumLabel = mode === 'hodl' ? 'HODL net wealth (USD)' : 'Cumulative net (USD)';
 
-  // Cumulative profit — stacked per-site when "All" is selected with 2+ sites
+  // Cumulative profit - stacked per-site when "All" is selected with 2+ sites
   destroyChart('cum');
   const labels = p.rows.map(r => 'M' + r.month);
   const isStacked = state.ui.resultsSiteId === 'all' && state.sites.length > 1;
@@ -2866,7 +2866,7 @@ function renderCapexList() {
         if (f === 'name') it.name = inp.value;
         else it.amount = parseFloat(inp.value) || 0;
         markDirty();
-        // Light update — only subtotal + section header (active site only)
+        // Light update - only subtotal + section header (active site only)
         const newTotal = state.capexItems
           .filter(x => x.siteId === state.ui.activeSiteId)
           .reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
@@ -3190,7 +3190,7 @@ function bindInputs() {
   $('#uptime').addEventListener('input', (e) => { activeSite().ops.uptimePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
   $('#maintenance').addEventListener('input', (e) => { activeSite().ops.maintenancePct = parseFloat(e.target.value) || 0; markDirty(); recalcAndRender(); });
 
-  // Network — track user override
+  // Network - track user override
   $('#btc-price').addEventListener('input', (e) => {
     state.network.btcPrice = parseFloat(e.target.value) || 0;
     state.network._priceFromLive = false;
@@ -3575,13 +3575,13 @@ var qrcode=function(){function i(t,r){function a(t,r){g=function(t){for(var r=ne
   clearDirty();
   renderTicker();
   refreshLive();
-  // Live data is fetched only on initial load — refresh the page to update.
+  // Live data is fetched only on initial load - refresh the page to update.
 
   // Helpful first-run nudge
   if (!had) {
-    setTimeout(() => showToast('Welcome to HashPath — pick a miner preset to start', 'success'), 400);
+    setTimeout(() => showToast('Welcome to HashPath - pick a miner preset to start', 'success'), 400);
   } else {
-    // Don't surface "What's New" on a fresh install — the user has nothing to compare against
+    // Don't surface "What's New" on a fresh install - the user has nothing to compare against
     checkWhatsNew();
   }
 })();
