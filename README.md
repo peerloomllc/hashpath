@@ -90,7 +90,7 @@ Everything lives in one file (`hashpath.html`, ~3400 lines):
 
 ## Dependencies
 
-- [Chart.js 4.4.1](https://www.chartjs.org/) - cumulative profit + sensitivity + difficulty-history charts (CDN)
+- [Chart.js 4.4.1](https://www.chartjs.org/) - cumulative profit + sensitivity + difficulty-history charts (embedded in the file)
 - [qrcode-generator 1.4.4](https://github.com/kazuhikoarase/qrcode-generator) (MIT) - inlined for the Donate BTC QR
 
 That's the full list. No frameworks, no bundler, no package manager.

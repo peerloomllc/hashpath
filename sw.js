@@ -1,5 +1,5 @@
 // HashPath service worker.
-// Stale-while-revalidate for the calculator and Chart.js so the app loads
+// Stale-while-revalidate for the calculator (Chart.js is embedded) so the app loads
 // instantly and works offline; live data calls (BTC price, difficulty,
 // halving countdown) are passed through to the network so they never go
 // stale silently.
@@ -7,9 +7,8 @@
 // Bump CACHE_NAME on every release that changes hashpath.html so installed
 // users get the new version on their next visit.
 
-const CACHE_NAME = 'hashpath-v1';
-const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
-const PRECACHE = ['./', './hashpath.html', CHART_JS];
+const CACHE_NAME = 'hashpath-v2';
+const PRECACHE = ['./', './hashpath.html'];
 
 const NETWORK_ONLY_HOST_SUFFIXES = [
   'coingecko.com',
